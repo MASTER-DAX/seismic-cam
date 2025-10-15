@@ -3,7 +3,10 @@ import os
 from datetime import datetime
 
 app = Flask(__name__)
-UPLOAD_FOLDER = "static/uploads"
+
+# Absolute path to avoid FileExistsError
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/upload', methods=['POST'])
@@ -36,5 +39,5 @@ def index():
     html += "</body></html>"
     return render_template_string(html)
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
