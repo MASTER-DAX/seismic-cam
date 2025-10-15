@@ -4,10 +4,18 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Absolute path to avoid FileExistsError
+# Use absolute path (safe for Render)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# ✅ Safe folder creation to avoid FileExistsError on Render
+if not os.path.exists(UPLOAD_FOLDER):
+    try:
+        os.makedirs(UPLOAD_FOLDER)
+    except FileExistsError:
+        pass
+    except PermissionError:
+        print("⚠️ Warning: Cannot create uploads folder (permission denied). It may already exist.")
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
@@ -20,6 +28,7 @@ def upload_image():
 
 @app.route('/')
 def index():
+    # Sort newest first
     files = sorted(os.listdir(UPLOAD_FOLDER), reverse=True)
     html = """
     <html>
@@ -40,4 +49,6 @@ def index():
     return render_template_string(html)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    # Use port 10000 on Render if needed
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
