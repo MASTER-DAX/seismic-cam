@@ -2,7 +2,7 @@ from flask import Flask, request, render_template_string
 import os
 from datetime import datetime
 
-app = Flask(_name_)
+app = Flask(__name__)
 UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
