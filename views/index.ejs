@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Earthquake Alert Images</title>
+  <style>
+    body { font-family: Arial; text-align: center; background: #f3f3f3; }
+    img { width: 300px; margin: 10px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h1>📸 Captured Images (ESP32-CAM)</h1>
+  <% files.forEach(file => { %>
+    <img src="/uploads/<%= file %>" alt="Captured image">
+  <% }) %>
+</body>
+</html>
