@@ -1,4 +1,4 @@
-
+from flask_cors import CORS
 import os
 import time
 from flask import Flask, request, jsonify, render_template
@@ -6,7 +6,9 @@ from flask_socketio import SocketIO
 from db import users_col, logs_col
 
 app = Flask(__name__)
+CORS(app)  # <--- VERY IMPORTANT
 socketio = SocketIO(app, cors_allowed_origins="*")
+
 
 # ======================================
 # HOME - SERVE FRONTEND
