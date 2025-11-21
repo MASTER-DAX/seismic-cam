@@ -21,6 +21,6 @@ except Exception as e:
 # ==========================
 # DATABASE + COLLECTIONS
 # ==========================
-db = client["rfid_system"]     # database name
+db = client["smart_cottage"]     # database name
 users_col = db["users"]        # store users
-logs_col = db["logs"]          # store scan logs
+logs_col = db["sensors"]          # store scan logs
