@@ -1,0 +1,106 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>RFID Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Inter, Arial, sans-serif; background:#f4f6f8; margin:0; padding:20px; color:#222; }
+    .container { max-width:720px; margin:20px auto; }
+    .card { background:#fff; padding:18px; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.06); }
+    #status { font-size:18px; text-align:center; padding:12px; }
+    #register { margin-top:18px; }
+    input { width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #dcdcdc; }
+    button { width:100%; padding:12px; margin-top:14px; border-radius:8px; border:0; background:#0b76ff; color:white; cursor:pointer; font-weight:600; }
+    button:hover { opacity:0.95; }
+    .hidden { display:none; }
+    .small { font-size:13px; color:#666; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div id="status">Waiting for card tap...</div>
+
+      <div id="register" class="hidden">
+        <h3>Register Card</h3>
+        <div>UID: <strong id="regUID"></strong></div>
+        <input id="name" placeholder="Full name" />
+        <input id="email" placeholder="Email (optional)" />
+        <button id="btnRegister">Register</button>
+        <div class="small">Tap the card again after registering to trigger the buzzer (if registered).</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const SERVER_BASE = window.location.origin; // works when Flask serves the frontend
+let lastUIDSeen = null;
+
+// Poll the backend for last_card
+async function pollLastCard() {
+  try {
+    const res = await fetch("/last_card");
+    const json = await res.json();
+    const uid = json.uid;
+    if (!uid) return;
+    if (uid === lastUIDSeen) return;
+    lastUIDSeen = uid;
+    onCardTapped(uid);
+  } catch (e) {
+    console.warn("Poll error", e);
+  }
+}
+
+setInterval(pollLastCard, 1000);
+pollLastCard();
+
+// Handle card - check if registered
+async function onCardTapped(uid) {
+  document.getElementById("status").innerText = "Card tapped: " + uid;
+  // ask server if this card is registered
+  const res = await fetch("/check_card", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ uid })
+  });
+  const data = await res.json();
+  if (data.registered) {
+    document.getElementById("status").innerText = "Welcome, " + data.user.name + "!";
+    document.getElementById("register").classList.add("hidden");
+  } else {
+    // show registration UI
+    document.getElementById("regUID").innerText = uid;
+    document.getElementById("register").classList.remove("hidden");
+    document.getElementById("status").innerText = "Unregistered card — please register.";
+  }
+}
+
+// Register button
+document.getElementById("btnRegister").addEventListener("click", async () => {
+  const uid = lastUIDSeen;
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  if (!uid) { alert("No UID detected yet. Tap card first."); return; }
+  if (!name) { alert("Please enter name."); return; }
+
+  const res = await fetch("/register", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ uid, name, email })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    alert("Registered!");
+    // optionally hide registration
+    document.getElementById("register").classList.add("hidden");
+    document.getElementById("status").innerText = "Registered: " + name;
+  } else {
+    alert("Register failed: " + (data.msg || "unknown"));
+  }
+});
+</script>
+</body>
+</html>
