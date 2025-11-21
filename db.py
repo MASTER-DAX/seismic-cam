@@ -1,11 +1,16 @@
 # db.py
-from pymongo.mongo_client import MongoClient
+import os
+from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
 # ==========================
 # MONGODB CONNECTION STRING
 # ==========================
-MONGO_URI = "mongodb+srv://daxdeniega16:13541ASAka@cluster0.u2nctpk.mongodb.net/?appName=Cluster0"
+# Read from Render's environment variable
+MONGO_URI = os.getenv("MONGO_URI")
+
+if not MONGO_URI:
+    raise ValueError("⚠️ MONGO_URI environment variable is not set!")
 
 # ==========================
 # CONNECT TO MONGO ATLAS
@@ -22,5 +27,5 @@ except Exception as e:
 # DATABASE + COLLECTIONS
 # ==========================
 db = client["smart_cottage"]     # database name
-users_col = db["users"]        # store users
-logs_col = db["sensors"]          # store scan logs
+users_col = db["users"]          # store users
+logs_col = db["sensors"]         # store scan logs
