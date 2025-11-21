@@ -1,2 +1,4 @@
 flask
-gunicorn==20.1.0
+flask-cors
+pymongo
+python-dotenv
