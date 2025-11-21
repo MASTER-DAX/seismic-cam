@@ -13,7 +13,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # ==========================
 @app.route("/")
 def home():
-    return "RFID Backend is Running"
+       return render_template("dashboard.html")
 
 # ==========================
 # API: ADD USER
