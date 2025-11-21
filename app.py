@@ -1,88 +1,99 @@
 
-import os
+# app.py
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-from flask_socketio import SocketIO, emit
-from pymongo import MongoClient
-from dotenv import load_dotenv
+from flask_socketio import SocketIO
+from db import users_col, logs_col
+import time
 
-load_dotenv()
-
-# ------------------- CONFIG --------------------
-MONGO_URI = os.getenv("MONGO_URI")
-client = MongoClient(MONGO_URI)
-db = client["rfid_system"]
-users = db["users"]
-
-# Flask App
 app = Flask(__name__)
-CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
-# ------------------------------------------------
 
+# ==========================
+# ROOT (SERVE FRONTEND)
+# ==========================
+@app.route("/")
+def home():
+    return "RFID Backend is Running"
 
-# ============ REGISTER USER (Name Only) =====================
-@app.route("/api/register", methods=["POST"])
-def register_user():
+# ==========================
+# API: ADD USER
+# ==========================
+@app.route("/add_user", methods=["POST"])
+def add_user():
     data = request.json
+    rfid = data.get("rfid")
     name = data.get("name")
 
-    if not name:
-        return jsonify({"error": "Name required"}), 400
+    if not rfid or not name:
+        return jsonify({"status": "error", "message": "Missing fields"}), 400
 
-    # Create placeholder for card ID (assigned later via write mode)
-    user_id = users.insert_one({
-        "name": name,
-        "card_id": None
-    }).inserted_id
+    # check if RFID already exists
+    if users_col.find_one({"rfid": rfid}):
+        return jsonify({"status": "error", "message": "RFID already registered"}), 409
 
-    return jsonify({"message": "User created", "user_id": str(user_id)}), 200
+    users_col.insert_one({
+        "rfid": rfid,
+        "name": name
+    })
 
+    return jsonify({"status": "success", "message": "User added!"})
 
-# ============ TRIGGER WRITE MODE FOR ESP32 ==================
-@app.route("/api/write-command", methods=["POST"])
-def write_command():
+# ==========================
+# API: GET ALL USERS
+# ==========================
+@app.route("/users", methods=["GET"])
+def get_users():
+    users = list(users_col.find({}, {"_id": 0}))
+    return jsonify(users)
+
+# ==========================
+# API: DELETE USER
+# ==========================
+@app.route("/delete_user", methods=["POST"])
+def delete_user():
     data = request.json
-    user_id = data.get("user_id")
+    rfid = data.get("rfid")
 
-    if not user_id:
-        return jsonify({"error": "UserID missing"}), 400
+    if not rfid:
+        return jsonify({"status": "error", "message": "Missing RFID"}), 400
 
-    # Inform ESP32 via WebSocket
-    socketio.emit("write_mode", {"user_id": user_id})
+    users_col.delete_one({"rfid": rfid})
+    return jsonify({"status": "success", "message": "User deleted!"})
 
-    return jsonify({"message": "Write mode triggered"}), 200
-
-
-# =============== ESP32 CONFIRMS RFID WRITE ==================
-@app.route("/api/confirm-write", methods=["POST"])
-def confirm_write():
+# ==========================
+# API: RFID SCAN ENDPOINT
+# (ESP32 → SERVER)
+# ==========================
+@app.route("/scan", methods=["POST"])
+def scan():
     data = request.json
-    user_id = data.get("user_id")
-    card_id = data.get("card_id")
+    rfid = data.get("rfid")
 
-    if not user_id or not card_id:
-        return jsonify({"error": "Missing data"}), 400
+    user = users_col.find_one({"rfid": rfid})
 
-    users.update_one({"_id": user_id}, {"$set": {"card_id": card_id}})
+    log_data = {
+        "rfid": rfid,
+        "name": user["name"] if user else "Unknown",
+        "timestamp": time.time()
+    }
 
-    return jsonify({"message": "RFID saved to user"}), 200
+    logs_col.insert_one(log_data)
 
+    # notify frontend via websocket
+    socketio.emit("scan_event", log_data)
 
-# =============== VALIDATE RFID ON SCAN ======================
-@app.route("/api/validate-rfid", methods=["POST"])
-def validate_rfid():
-    data = request.json
-    card_id = data.get("card_id")
+    return jsonify({"status": "received"})
 
-    user = users.find_one({"card_id": card_id})
+# ==========================
+# API: GET LOG HISTORY
+# ==========================
+@app.route("/logs", methods=["GET"])
+def get_logs():
+    logs = list(logs_col.find({}, {"_id": 0}))
+    return jsonify(logs)
 
-    if user:
-        return jsonify({"access": True, "name": user["name"]}), 200
-    else:
-        return jsonify({"access": False}), 200
-
-
-# ------------------- RUN SERVER ---------------------
+# ==========================
+# RUN SERVER
+# ==========================
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000)
