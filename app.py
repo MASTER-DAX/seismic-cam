@@ -1,6 +1,6 @@
 
 # app.py
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_socketio import SocketIO
 from db import users_col, logs_col
 import time
