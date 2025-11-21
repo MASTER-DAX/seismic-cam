@@ -1,79 +1,134 @@
 
+
 # backend/app.py
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from db import get_user, register_user, list_users
-from pathlib import Path
+from flask_socketio import SocketIO
+from db import find_user_by_uid, register_user, trigger_buzzer_event, list_users
 
-app = Flask(__name__)
-CORS(app)
+# Flask app
+app = Flask(__name__, static_folder="../frontend", static_url_path="/")
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# === robust path to frontend folder (works on Render) ===
-BASE_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = (BASE_DIR / ".." / "frontend").resolve()  # ../frontend
+# Socket.IO (use eventlet or gevent when running on production)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
-# store the last received uid (simple in-memory; you can persist if needed)
-last_uid = None
 
-# === Serve frontend index ===
 @app.route("/")
-def serve_index():
-    # serve index.html from frontend dir
-    return send_from_directory(str(FRONTEND_DIR), "index.html")
+def index():
+    # Serve frontend index.html
+    return send_from_directory(app.static_folder, "index.html")
 
-# serve other static files in frontend folder at /frontend/<path>
-@app.route("/frontend/<path:path>")
-def serve_frontend_file(path):
-    return send_from_directory(str(FRONTEND_DIR), path)
 
-# === API ===
-@app.route("/update_card", methods=["POST"])
-def update_card():
-    """Called by ESP32 after reading UID from Arduino. Stores last_uid in memory."""
-    global last_uid
-    data = request.json or {}
-    uid = data.get("uid")
-    last_uid = uid
-    return jsonify({"ok": True, "uid": uid})
+# --------------------
+# ESP32 endpoint
+# --------------------
+# ESP32 POSTs here when it reads a card.
+@app.route("/esp/read", methods=["POST"])
+def esp_read():
+    """
+    Expected JSON: {"uid": "0123456789ABCDEF"}
+    Response to ESP32: {"buzzer": true/false, "message": "..."}
+    Also emits 'card_scanned' to connected frontends via Socket.IO
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    uid = (data.get("uid") or "").strip()
+    if not uid:
+        return jsonify({"error": "missing uid"}), 400
 
-@app.route("/last_card", methods=["GET"])
-def last_card():
-    """Frontend polls this endpoint to get the latest tapped UID."""
-    return jsonify({"uid": last_uid})
-
-@app.route("/check_card", methods=["POST"])
-def check_card():
-    """Check if UID exists in DB. Returns registered true/false and user details when present."""
-    data = request.json or {}
-    uid = data.get("uid")
-    user = get_user(uid)
+    user = find_user_by_uid(uid)
     if user:
-        # return only needed fields (avoid sending _id raw)
-        return jsonify({"registered": True, "user": {"name": user.get("name"), "email": user.get("email")}})
+        payload = {
+            "uid": uid,
+            "status": "registered",
+            "user": {
+                "name": user.get("name"),
+                "email": user.get("email"),
+            },
+        }
+        socketio.emit("card_scanned", payload)
+        trigger_buzzer_event(uid, {"reason": "registered_card_scanned"})
+        return jsonify({"buzzer": True, "message": f"Welcome {user.get('name') or 'user'}"}), 200
     else:
-        return jsonify({"registered": False})
+        payload = {"uid": uid, "status": "unregistered"}
+        socketio.emit("card_scanned", payload)
+        return jsonify({"buzzer": False, "message": "Invalid / not registered card"}), 200
 
-@app.route("/register", methods=["POST"])
-def register():
-    """Register a new card => store uid, name, email"""
-    data = request.json or {}
-    uid = data.get("uid")
+
+# --------------------
+# REST endpoints for frontend/admin
+# --------------------
+@app.route("/api/check/<uid>", methods=["GET"])
+def api_check(uid):
+    """Check if uid is registered"""
+    uid = uid.strip()
+    user = find_user_by_uid(uid)
+    if user:
+        return jsonify({"found": True, "user": {"uid": user["uid"], "name": user.get("name"), "email": user.get("email")}})
+    else:
+        return jsonify({"found": False})
+
+
+@app.route("/api/register", methods=["POST"])
+def api_register():
+    """
+    Register new user.
+    Expects JSON: {"uid": "...", "name": "...", "email": "...", "meta": {...}}
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    uid = (data.get("uid") or "").strip()
     name = data.get("name")
     email = data.get("email")
+
     if not uid or not name:
-        return jsonify({"ok": False, "msg": "uid and name required"}), 400
+        return jsonify({"error": "uid and name required"}), 400
 
-    register_user(uid, name, email)
-    return jsonify({"ok": True, "msg": "Registered", "uid": uid})
+    try:
+        doc, created = register_user({"uid": uid, "name": name, "email": email, "meta": data.get("meta", {})})
+        socketio.emit("user_registered", {"uid": uid, "name": name, "email": email, "created": created})
+        return jsonify({"ok": True, "created": created, "user": {"uid": doc["uid"], "name": doc.get("name"), "email": doc.get("email")}})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-@app.route("/users", methods=["GET"])
-def users():
-    """Admin endpoint to list users. (Optional)"""
-    results = list_users()
-    out = [{"uid": r.get("uid"), "name": r.get("name"), "email": r.get("email")} for r in results]
-    return jsonify(out)
+
+@app.route("/api/users", methods=["GET"])
+def api_users():
+    users = list_users()
+    sanitized = [{"uid": u.get("uid"), "name": u.get("name"), "email": u.get("email")} for u in users]
+    return jsonify({"users": sanitized})
+
+
+@app.route("/api/trigger_buzzer", methods=["POST"])
+def api_trigger_buzzer():
+    """
+    Manually trigger buzzer for a uid (admin).
+    Expects JSON: {"uid": "...", "duration_ms": 200}
+    Emits 'buzzer' event to frontends and logs event.
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    uid = (data.get("uid") or "").strip()
+    if not uid:
+        return jsonify({"error": "uid required"}), 400
+
+    details = {"duration_ms": data.get("duration_ms", 200)}
+    trigger_buzzer_event(uid, details)
+    socketio.emit("buzzer", {"uid": uid, "details": details})
+    return jsonify({"ok": True})
+
+
+# Socket.IO events (optional)
+@socketio.on("connect")
+def on_connect():
+    print("Client connected")
+
+
+@socketio.on("disconnect")
+def on_disconnect():
+    print("Client disconnected")
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    print(f"Starting app on 0.0.0.0:{port}")
+    socketio.run(app, host="0.0.0.0", port=port)
