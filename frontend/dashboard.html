@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>RFID Dashboard</title>
+<style>
+  body{font-family:Arial;padding:20px;background:#f4f6f8}
+  .card{max-width:520px;margin:20px auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,0.06)}
+  input,button{width:100%;padding:10px;margin-top:8px;border-radius:6px;border:1px solid #ddd}
+  #users{margin-top:12px}
+  li{padding:6px 0;border-bottom:1px solid #eee}
+  .small{font-size:13px;color:#666}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>RFID Registration</h2>
+
+  <label class="small">Name</label>
+  <input id="name" placeholder="Full name">
+
+  <button id="btnCreate">Create user (prepare to write)</button>
+
+  <div id="status" class="small" style="margin-top:12px"></div>
+
+  <hr>
+
+  <h3>Registered Users</h3>
+  <ul id="users"></ul>
+</div>
+
+<script>
+const API_BASE = "https://your-backend.onrender.com"; // ← REPLACE
+
+async function fetchUsers(){
+  try{
+    const r = await fetch(API_BASE + "/users");
+    const arr = await r.json();
+    const ul = document.getElementById('users');
+    ul.innerHTML = "";
+    arr.forEach(u=>{
+      const li = document.createElement('li');
+      li.textContent = `${u.name} — ${u.rfid || "(no card yet)"} ${u.pending ? "[pending]" : ""}`;
+      ul.appendChild(li);
+    });
+  }catch(e){
+    console.error(e);
+  }
+}
+
+document.getElementById('btnCreate').onclick = async ()=>{
+  const name = document.getElementById('name').value.trim();
+  if(!name) return alert("Enter name");
+  document.getElementById('status').textContent = "Creating user...";
+  try{
+    // 1) Create placeholder user (backend should create pending user and return user_id)
+    const createResp = await fetch(API_BASE + "/create_pending_user", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ name })
+    });
+    const data = await createResp.json();
+    if (!data.ok) {
+      document.getElementById('status').textContent = "Error creating user";
+      return;
+    }
+    const userId = data.user_id;
+    document.getElementById('status').textContent = "User created. Waiting for you to tap card on reader...";
+    // 2) trigger write mode (backend will mark user as pending and/or queue request)
+    await fetch(API_BASE + "/request_write", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ user_id: userId })
+    });
+    // Poll user status until rfid assigned
+    const checkInterval = setInterval(async ()=>{
+      const r = await fetch(API_BASE + "/users");
+      const arr = await r.json();
+      const u = arr.find(x => x._id === userId || x.user_id === userId);
+      if (u && (u.rfid || u.card_id)) {
+        clearInterval(checkInterval);
+        document.getElementById('status').textContent = "Registered! Card ID: " + (u.rfid || u.card_id);
+        fetchUsers();
+      }
+    }, 1500);
+  }catch(err){
+    console.error(err);
+    document.getElementById('status').textContent = "Network error";
+  }
+};
+
+fetchUsers();
+setInterval(fetchUsers, 5000);
+</script>
+</body>
+</html>
