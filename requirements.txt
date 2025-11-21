@@ -1,6 +1,4 @@
-flask
-flask-cors
+Flask
+Flask-Cors
 pymongo
-python-dotenv
-flask-socketio
 gunicorn
