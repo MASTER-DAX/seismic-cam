@@ -15,6 +15,7 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 
+
 @app.route("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
