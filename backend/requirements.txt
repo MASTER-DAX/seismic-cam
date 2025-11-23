@@ -1,13 +1,4 @@
 flask
 flask-cors
-
-# Socket.IO stack (Python 3.13 compatible)
-flask-socketio==5.5.1
-python-socketio==5.12.0
-python-engineio==4.11.1
-
-eventlet
-
 pymongo
-dnspython
 gunicorn
