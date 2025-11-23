@@ -1,152 +1,69 @@
+
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>RFID Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 24px; background: #f7fafc; color: #111; }
-    .card { background:white; padding:18px; border-radius:12px; box-shadow: 0 6px 18px rgba(20,20,40,0.06); max-width:720px; margin: 18px auto; }
-    h1 { margin:0 0 12px 0; font-size:20px; }
-    #status { margin-bottom: 12px; font-weight:600; }
-    .hidden { display:none; }
-    label { display:block; margin-top:8px; font-size:13px; color:#444; }
-    input[type="text"], input[type="email"] { width:100%; padding:8px 10px; border-radius:8px; border:1px solid #e6e9ef; margin-top:6px; }
-    button { margin-top:12px; padding:10px 14px; border-radius:10px; border:none; background:#0ea5a3; color:white; font-weight:600; cursor:pointer; }
-    .success { color: #065f46; background: #ecfdf5; padding:10px; border-radius:8px; }
-    .warn { color:#92400e; background:#fff7ed; padding:10px; border-radius:8px; }
-    .users-list { margin-top:16px; font-size:14px; }
-  </style>
+<meta charset="utf-8" />
+<title>Register & Login</title>
+<style>
+body{font-family:Arial;padding:20px;background:#f4f4f4}
+.card{max-width:400px;margin:auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+input,button{width:100%;padding:10px;margin:8px 0}
+button{background:#0066ff;color:white;border:none;border-radius:6px;cursor:pointer}
+</style>
 </head>
 <body>
-  <div class="card">
-    <h1>RFID Dashboard</h1>
-    <div id="status">Waiting for card...</div>
 
-    <div id="registeredBox" class="hidden">
-      <div class="success" id="registeredMsg">Registered card tapped.</div>
-    </div>
 
-    <div id="unregisteredBox" class="hidden">
-      <div class="warn">Unregistered card detected. Fill this form to register:</div>
-      <form id="registerForm">
-        <input type="hidden" id="regUid" />
-        <label>Name <input id="regName" type="text" required></label>
-        <label>Email <input id="regEmail" type="email"></label>
-        <button type="submit">Register</button>
-      </form>
-      <div id="registerResult"></div>
-    </div>
+<div class="card">
+<h2>Registration</h2>
+<input id="regName" placeholder="Name" />
+<input id="regAge" placeholder="Age" type="number" />
+<button onclick="registerUser()">Register</button>
 
-    <div id="invalidBox" class="hidden">
-      <div class="warn" id="invalidMsg">Invalid card</div>
-    </div>
 
-    <div class="users-list">
-      <h3>Known users (preview)</h3>
-      <ul id="userList"></ul>
-    </div>
-  </div>
+<hr>
+
+
+<h2>Login</h2>
+<input id="loginName" placeholder="Name" />
+<button onclick="loginUser()">Login</button>
+
+
+<p id="msg" style="color:green;font-weight:bold"></p>
+</div>
+
 
 <script>
-  const statusEl = document.getElementById('status');
-  const registeredBox = document.getElementById('registeredBox');
-  const unregisteredBox = document.getElementById('unregisteredBox');
-  const invalidBox = document.getElementById('invalidBox');
-  const regUid = document.getElementById('regUid');
-  const regName = document.getElementById('regName');
-  const regEmail = document.getElementById('regEmail');
-  const registerForm = document.getElementById('registerForm');
-  const registerResult = document.getElementById('registerResult');
-  const registeredMsg = document.getElementById('registeredMsg');
-  const userListEl = document.getElementById('userList');
+const API = "https://your-backend.onrender.com";
 
-  function hideAll() {
-    registeredBox.classList.add('hidden');
-    unregisteredBox.classList.add('hidden');
-    invalidBox.classList.add('hidden');
-  }
 
-  // Connect to Socket.IO (same origin)
-  const socket = io();
+async function registerUser(){
+const name = document.getElementById("regName").value;
+const age = document.getElementById("regAge").value;
 
-  socket.on('connect', () => {
-    statusEl.textContent = 'Connected to server — ready';
-  });
 
-  socket.on('disconnect', () => {
-    statusEl.textContent = 'Disconnected from server';
-  });
+const res = await fetch(API + "/register", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({name, age})
+});
+const data = await res.json();
+document.getElementById("msg").innerText = data.msg;
+}
 
-  // When backend announces a card was scanned
-  socket.on('card_scanned', (payload) => {
-    hideAll();
-    const uid = payload.uid;
-    if (payload.status === 'registered') {
-      statusEl.textContent = `Registered card: ${payload.user.name || 'Unknown'}`;
-      registeredMsg.textContent = `Welcome ${payload.user.name || 'user'} — UID ${uid}`;
-      registeredBox.classList.remove('hidden');
-      try { new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=').play(); } catch(e){/*ignore*/}
-    } else if (payload.status === 'unregistered') {
-      statusEl.textContent = `Unregistered card detected: ${uid}`;
-      regUid.value = uid;
-      regName.value = '';
-      regEmail.value = '';
-      registerResult.textContent = '';
-      unregisteredBox.classList.remove('hidden');
-    } else {
-      statusEl.textContent = `Card: ${uid}`;
-      invalidBox.classList.remove('hidden');
-    }
-  });
 
-  // Update user list
-  async function fetchUsers() {
-    try {
-      const r = await fetch('/api/users');
-      const j = await r.json();
-      userListEl.innerHTML = '';
-      (j.users || []).slice(0, 20).forEach(u => {
-        const li = document.createElement('li');
-        li.textContent = `${u.name || '—'} (${u.uid}) ${u.email ? '‹' + u.email + '›' : ''}`;
-        userListEl.appendChild(li);
-      });
-    } catch (e) {
-      console.warn('could not fetch users', e);
-    }
-  }
-  fetchUsers();
+async function loginUser(){
+const name = document.getElementById("loginName").value;
 
-  registerForm.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    const payload = {
-      uid: regUid.value.trim(),
-      name: regName.value.trim(),
-      email: regEmail.value.trim()
-    };
-    registerResult.textContent = 'Registering...';
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
-      });
-      const j = await res.json();
-      if (j.ok) {
-        registerResult.textContent = `Registered: ${j.user.name}`;
-        fetchUsers();
-        setTimeout(() => {
-          hideAll();
-          statusEl.textContent = 'Waiting for card...';
-        }, 1200);
-      } else {
-        registerResult.textContent = `Error: ${j.error || 'unknown'}`;
-      }
-    } catch (err) {
-      registerResult.textContent = `Network error: ${err.message}`;
-    }
-  });
+
+const res = await fetch(API + "/login", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({name})
+});
+const data = await res.json();
+document.getElementById("msg").innerText = data.msg;
+}
 </script>
 </body>
 </html>
