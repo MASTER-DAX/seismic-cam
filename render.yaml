@@ -1,6 +1,6 @@
 services:
 - type: web
-name: rfid-backend
+name: rfid-database
 env: python
 plan: free
 buildCommand: ""
