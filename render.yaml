@@ -1,0 +1,7 @@
+services:
+- type: web
+name: rfid-backend
+env: python
+plan: free
+buildCommand: ""
+startCommand: "python backend/app.py"
