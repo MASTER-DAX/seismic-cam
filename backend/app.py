@@ -3,7 +3,7 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
-from db import find_user_by_uid, register_user, trigger_buzzer_event, list_users
+from db import find_user_by_uid, register_user, trigger_buzzer_event, list_all
 
 # --------------------
 # FLASK CONFIG
