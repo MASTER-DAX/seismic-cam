@@ -6,7 +6,6 @@
   <title>RFID Admin — Register Card</title>
   <meta name="description" content="Admin interface to register RFID cards (ESP32 + MFRC522 backend)" />
   <style>
-    /* ---------- Layout ---------- */
     :root {
       --bg: #f5f7fb;
       --card: #ffffff;
@@ -15,78 +14,92 @@
       --radius: 12px;
     }
     * { box-sizing: border-box; }
-    html,body { height:100%; margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:#111827; }
+    html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system; background:var(--bg); color:#111827; }
     .wrap { min-height:100%; display:flex; align-items:center; justify-content:center; padding:24px; }
+
     .card {
-      width: 420px;
+      width: 430px;
       background: var(--card);
       border-radius: var(--radius);
       box-shadow: 0 10px 30px rgba(15,23,42,0.08);
       padding: 22px;
     }
-    h1 { margin:0 0 6px 0; font-size:20px; letter-spacing:-0.2px; }
+    h1 { margin:0 0 6px 0; font-size:20px; }
     p.lead { margin:0 0 14px 0; color:var(--muted); font-size:13px; }
 
-    /* ---------- Notice & Tap area ---------- */
     #notice { font-size:13px; color:var(--muted); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
     #notice .dot { width:10px; height:10px; border-radius:50%; background:#fde68a; box-shadow:0 0 0 4px rgba(250,204,21,0.06); }
 
-    /* ---------- Form ---------- */
-    form label { display:block; margin:10px 0 0 0; font-size:13px; color:#374151; }
+    form label { display:block; margin-top:10px; font-size:13px; color:#374151; }
     input[type="text"], input[type="date"], select {
-      width:100%; padding:10px 12px; margin-top:8px; border-radius:8px; border:1px solid #e6e9ee; background:#fcfdff;
-      font-size:14px; outline:none;
+      width:100%; padding:10px 12px; margin-top:6px; border-radius:8px;
+      border:1px solid #e6e9ee; background:#fcfdff; font-size:14px;
     }
-    input[readonly] { background:#f3f4f6; color:#111827; }
-    .row { display:flex; gap:10px; }
-    .row .col { flex:1; }
+    input[readonly] { background:#f3f4f6; }
 
-    .actions { display:flex; gap:8px; margin-top:16px; align-items:center; }
+    .row { display:flex; gap:10px; }
+    .col { flex:1; }
+
+    .actions { display:flex; gap:8px; margin-top:16px; }
     button {
-      appearance:none; border:0; padding:10px 14px; border-radius:10px; font-weight:600; cursor:pointer;
-      background:var(--primary); color: #fff;
+      padding:10px 14px; border-radius:10px; border:0; cursor:pointer;
+      background:var(--primary); color:#fff; font-weight:600;
     }
     button.secondary {
-      background:transparent; color:var(--primary); border:1px solid rgba(31,111,235,0.12);
-      font-weight:600;
+      background:transparent; color:var(--primary);
+      border:1px solid rgba(31,111,235,0.25);
     }
 
-    /* ---------- small text / logs ---------- */
-    #log { margin-top:14px; font-size:13px; color:#374151; background:#fbfdff; border-radius:8px; padding:10px; border:1px dashed #eef2ff; min-height:36px; }
+    #log {
+      margin-top:14px; font-size:13px; color:#374151; border-radius:8px;
+      background:#fbfdff; padding:10px; border:1px dashed #eef2ff; min-height:36px;
+    }
     .small { font-size:12px; color:var(--muted); margin-top:6px; }
 
-    /* Responsive */
     @media (max-width:480px) {
       .card { width:100%; padding:16px; border-radius:10px; }
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
-    <main class="card" role="main" aria-labelledby="title">
-      <h1 id="title">RFID Card Registration</h1>
-      <p class="lead">Tap a card on the reader. The UID will appear below — fill details and click Save.</p>
+    <main class="card">
+      <h1>RFID Card Registration</h1>
+      <p class="lead">Tap a card on your assigned reader. UID will appear automatically.</p>
 
-      <div id="notice"><span class="dot" aria-hidden="true"></span><span id="noticeText">Waiting for card tap…</span></div>
+      <div id="notice">
+        <span class="dot"></span><span id="noticeText">Waiting for card tap…</span>
+      </div>
 
-      <form id="regForm" autocomplete="off" novalidate>
+      <form id="regForm" autocomplete="off">
+        <label for="cottage">Cottage Assignment
+          <select id="cottage" name="cottage">
+            <option value="COTTAGE-1">Cottage 1</option>
+            <option value="COTTAGE-2">Cottage 2</option>
+            <option value="COTTAGE-3">Cottage 3</option>
+            <option value="COTTAGE-4">Cottage 4</option>
+          </select>
+        </label>
+
         <label for="uid">Card UID
-          <input id="uid" name="uid" type="text" readonly aria-readonly="true" placeholder="Tap a card..." />
+          <input id="uid" type="text" readonly placeholder="Tap a card...">
         </label>
 
         <label for="name">Name
-          <input id="name" name="name" type="text" required placeholder="Full name" />
+          <input id="name" type="text" required placeholder="Full name">
         </label>
 
-        <div class="row" style="margin-top:6px;">
+        <div class="row">
           <div class="col">
             <label for="employee_id">Employee ID
-              <input id="employee_id" name="employee_id" type="text" placeholder="Optional" />
+              <input id="employee_id" type="text" placeholder="Optional">
             </label>
           </div>
+
           <div class="col">
             <label for="access_level">Access Level
-              <select id="access_level" name="access_level" aria-label="Access Level">
+              <select id="access_level">
                 <option value="user">User</option>
                 <option value="staff">Staff</option>
                 <option value="admin">Admin</option>
@@ -96,8 +109,8 @@
           </div>
         </div>
 
-        <label for="valid_until" style="margin-top:10px;">Valid Until
-          <input id="valid_until" name="valid_until" type="date" />
+        <label for="valid_until">Valid Until
+          <input id="valid_until" type="date">
         </label>
 
         <div class="actions">
@@ -105,131 +118,78 @@
           <button type="button" class="secondary" id="clearBtn">Clear</button>
         </div>
 
-        <div id="log" aria-live="polite">No activity yet.</div>
-        <div class="small">Tip: Make sure ESP32 reader is connected and backend Socket.IO is reachable.</div>
+        <div id="log">No activity yet.</div>
+        <div class="small">Tip: Make sure ESP32 is connected & backend is reachable.</div>
       </form>
     </main>
   </div>
 
-  <!-- Socket.IO CDN (v4) -->
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
   <script>
-    /**
-     * CONFIG:
-     * - If you serve this HTML from the same origin as the backend, leave SERVER = ''.
-     * - Otherwise set SERVER to the full backend URL, e.g. "https://your-app.onrender.com"
-     *
-     * Backend endpoints used:
-     * - Socket.IO for 'card_tapped' events
-     * - POST /api/register_card to save card info (expects JSON)
-     */
-    const SERVER = ''; // <-- set backend URL if not same-origin (no trailing slash)
+    const SERVER = "";  
+    const socket = io(SERVER || window.location.origin);
 
-    const socketUrl = SERVER || window.location.origin;
-    const socket = io(socketUrl, { transports: ['websocket', 'polling'] });
+    const uidInput = document.getElementById("uid");
+    const noticeText = document.getElementById("noticeText");
+    const log = document.getElementById("log");
+    const form = document.getElementById("regForm");
 
-    const uidInput = document.getElementById('uid');
-    const nameInput = document.getElementById('name');
-    const empInput = document.getElementById('employee_id');
-    const accessSelect = document.getElementById('access_level');
-    const validUntil = document.getElementById('valid_until');
-    const noticeText = document.getElementById('noticeText');
-    const log = document.getElementById('log');
-    const form = document.getElementById('regForm');
-    const saveBtn = document.getElementById('saveBtn');
-    const clearBtn = document.getElementById('clearBtn');
-
-    function appendLog(msg, replace=false) {
+    function appendLog(msg, replace = true) {
       const ts = new Date().toLocaleTimeString();
-      if (replace) {
-        log.textContent = `[${ts}] ${msg}`;
-      } else {
-        log.textContent = `[${ts}] ${msg}\n` + log.textContent;
-      }
+      log.textContent = `[${ts}] ${msg}`;
     }
 
-    // Socket events
-    socket.on('connect', () => {
-      appendLog('Connected to server (' + socket.id + ')', true);
-    });
+    socket.on("connect", () => appendLog("Connected."));
+    socket.on("disconnect", () => appendLog("Disconnected."));
 
-    socket.on('disconnect', (reason) => {
-      appendLog('Disconnected: ' + reason, true);
-    });
-
-    // Expect server to emit { uid: '04:A3:12:...' }
-    socket.on('card_tapped', (data) => {
+    socket.on("card_tapped", (data) => {
       if (!data || !data.uid) return;
-      const uid = data.uid;
-      uidInput.value = uid;
-      noticeText.textContent = 'Card detected: ' + uid;
-      appendLog('Card tapped: ' + uid, true);
-
-      // Optionally, focus the name field for quick typing
-      nameInput.focus();
+      uidInput.value = data.uid;
+      noticeText.textContent = "Card detected: " + data.uid;
+      appendLog("Card tapped: " + data.uid);
+      document.getElementById("name").focus();
     });
 
-    // Fallback: show socket errors
-    socket.on('connect_error', (err) => {
-      appendLog('Socket connect error: ' + (err && err.message ? err.message : err), true);
-    });
-
-    // Form submit (register card)
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const uid = uidInput.value.trim();
-      const name = nameInput.value.trim();
-      if (!uid) { appendLog('No UID present. Tap a card first.'); return; }
-      if (!name) { appendLog('Name is required.'); nameInput.focus(); return; }
 
       const payload = {
-        uid,
-        name,
-        employee_id: empInput.value.trim() || null,
-        access_level: accessSelect.value,
-        valid_until: validUntil.value || null,
-        write_to_card: false // change to true if you will implement server pending_write flow
+        uid: uidInput.value.trim(),
+        name: document.getElementById("name").value.trim(),
+        employee_id: document.getElementById("employee_id").value.trim(),
+        access_level: document.getElementById("access_level").value,
+        valid_until: document.getElementById("valid_until").value,
+        cottage: document.getElementById("cottage").value
       };
 
-      saveBtn.disabled = true;
-      appendLog('Saving card to server...', true);
+      if (!payload.uid) return appendLog("Tap a card first.");
+      if (!payload.name) return appendLog("Name required.");
 
-      try {
-        const res = await fetch((SERVER || '') + '/api/register_card', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const json = await res.json().catch(()=>({}));
-        if (res.ok) {
-          appendLog('Saved ✓ UID: ' + uid, true);
-          // clear form but leave UID for convenience (or clear it entirely)
-          uidInput.value = '';
-          form.reset();
-          noticeText.textContent = 'Saved ✓ Tap next card...';
-        } else {
-          appendLog('Error saving: ' + (json.error || res.statusText || 'unknown'), true);
-        }
-      } catch (err) {
-        appendLog('Network error: ' + err.message, true);
-      } finally {
-        saveBtn.disabled = false;
+      appendLog("Saving…");
+
+      const res = await fetch("/api/register_card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        appendLog("Card saved successfully ✔");
+        form.reset();
+        uidInput.value = "";
+        noticeText.textContent = "Tap next card…";
+      } else {
+        appendLog("Error: " + (json.error || "Unknown"));
       }
     });
 
-    clearBtn.addEventListener('click', () => {
-      uidInput.value = '';
+    document.getElementById("clearBtn").onclick = () => {
       form.reset();
-      noticeText.textContent = 'Cleared.';
-      appendLog('Form cleared.', true);
-    });
-
-    // Helpful: try to reconnect socket when page becomes visible again
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && !socket.connected) {
-        socket.connect();
-      }
-    });
+      uidInput.value = "";
+      appendLog("Form cleared");
+    };
   </script>
 </body>
 </html>
