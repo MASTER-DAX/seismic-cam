@@ -1,4 +1,3 @@
-
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -16,6 +15,12 @@ app = Flask(__name__, static_folder="../frontend", static_url_path="")
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
+# -------------------------------------------------
+# HEALTH CHECK (for uptime pings)
+# -------------------------------------------------
+@app.route("/health")
+def health():
+    return "OK", 200
 
 # -------------------------------------------------
 # SERVE FRONTEND
@@ -23,7 +28,6 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 @app.route("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
-
 
 # -------------------------------------------------
 # ESP32 → Server: Tap Card
@@ -34,7 +38,7 @@ def tap_card():
     data = request.get_json() or {}
     
     uid = data.get("uid")
-    reader_cottage = data.get("reader_cottage")  # NEW!
+    reader_cottage = data.get("reader_cottage")
     
     if not uid:
         return jsonify({"error": "missing uid"}), 400
@@ -49,21 +53,14 @@ def tap_card():
     # lookup user
     user = find_user_by_uid(uid)
 
-    # return full data (ESP32 uses /api/check_access instead)
     return jsonify({
         "status": "ok",
         "registered": bool(user),
         "user": user
     })
 
-
 # -------------------------------------------------
 # ESP32 CHECK ACCESS
-# ESP32 sends:
-#   { "uid": "...", "reader_cottage": "COTTAGE-1" }
-#
-# Response returns:
-#   { access: "granted" | "denied", reason: "..." }
 # -------------------------------------------------
 @app.route("/api/check_access", methods=["POST"])
 def check_access():
@@ -85,14 +82,12 @@ def check_access():
             "reason": "Card not registered"
         })
 
-    # cottage mismatch
     if user.get("cottage") != reader_cottage:
         return jsonify({
             "access": "denied",
             "reason": "Card assigned to different cottage"
         })
 
-    # success
     return jsonify({
         "access": "granted",
         "reason": "Valid card & correct cottage",
@@ -102,7 +97,6 @@ def check_access():
             "access_level": user.get("access_level")
         }
     })
-
 
 # -------------------------------------------------
 # Admin → Register Card
@@ -116,7 +110,7 @@ def register_card():
     employee_id = data.get("employee_id")
     access_level = data.get("access_level")
     valid_until = data.get("valid_until")
-    cottage = data.get("cottage")  # NEW
+    cottage = data.get("cottage")
 
     if not uid or not name:
         return jsonify({"error": "uid and name required"}), 400
@@ -127,16 +121,16 @@ def register_card():
         "employee_id": employee_id,
         "access_level": access_level,
         "valid_until": valid_until,
-        "cottage": cottage  # store assigned cottage
+        "cottage": cottage
     }
 
     register_user(doc)
 
     return jsonify({"status": "saved"})
 
-
 # -------------------------------------------------
 # RUN SERVER
 # -------------------------------------------------
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    port = int(os.environ.get("PORT", 10000))  # stable port for Render
+    socketio.run(app, host="0.0.0.0", port=port)
