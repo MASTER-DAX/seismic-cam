@@ -5,7 +5,8 @@ from flask_socketio import SocketIO
 from db import (
     find_user_by_uid,
     register_user,
-    trigger_buzzer_event
+    trigger_buzzer_event,
+    get_user_counts_by_access_level
 )
 
 # -------------------------------------------------
@@ -16,7 +17,7 @@ CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 # -------------------------------------------------
-# HEALTH CHECK (for uptime pings)
+# HEALTH CHECK
 # -------------------------------------------------
 @app.route("/health")
 def health():
@@ -30,16 +31,22 @@ def index():
     return send_from_directory(app.static_folder, "index.html")
 
 # -------------------------------------------------
-# ESP32 → Server: Tap Card
-# Sends UID + reader's cottage ID
+# 🔥 DASHBOARD COUNTS (ADDED ONLY)
+# -------------------------------------------------
+@app.route("/api/user_counts")
+def user_counts():
+    return jsonify(get_user_counts_by_access_level())
+
+# -------------------------------------------------
+# ESP32 → TAP CARD
 # -------------------------------------------------
 @app.route("/api/tap", methods=["POST"])
 def tap_card():
     data = request.get_json() or {}
-    
+
     uid = data.get("uid")
     reader_cottage = data.get("reader_cottage")
-    
+
     if not uid:
         return jsonify({"error": "missing uid"}), 400
     if not reader_cottage:
@@ -60,7 +67,7 @@ def tap_card():
     })
 
 # -------------------------------------------------
-# ESP32 CHECK ACCESS
+# ESP32 CHECK ACCESS (UNCHANGED)
 # -------------------------------------------------
 @app.route("/api/check_access", methods=["POST"])
 def check_access():
@@ -99,7 +106,7 @@ def check_access():
     })
 
 # -------------------------------------------------
-# Admin → Register Card
+# ADMIN → REGISTER CARD (UNCHANGED)
 # -------------------------------------------------
 @app.route("/api/register_card", methods=["POST"])
 def register_card():
@@ -132,5 +139,5 @@ def register_card():
 # RUN SERVER
 # -------------------------------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # stable port for Render
+    port = int(os.environ.get("PORT", 10000))
     socketio.run(app, host="0.0.0.0", port=port)
