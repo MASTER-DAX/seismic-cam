@@ -21,3 +21,31 @@ def find_user_by_uid(uid):
 
 def trigger_buzzer_event(uid):
     taps.insert_one({"uid": uid, "ts": datetime.utcnow()})
+
+
+# 🔥 NEW: COUNTS FOR DASHBOARD
+def get_user_counts_by_access_level():
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$access_level",
+                "count": {"$sum": 1}
+            }
+        }
+    ]
+
+    result = users.aggregate(pipeline)
+
+    counts = {
+        "guest": 0,
+        "basic": 0,
+        "premium": 0,
+        "admin": 0
+    }
+
+    for row in result:
+        level = (row["_id"] or "").lower()
+        if level in counts:
+            counts[level] = row["count"]
+
+    return counts
