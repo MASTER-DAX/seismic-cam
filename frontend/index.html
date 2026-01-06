@@ -11,25 +11,12 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 
 <style>
-body {
-    background-color: #e8f2ff; /* LIGHT BLUE */
-}
+body { background-color: #e8f2ff; }
 .nunito { font-family: 'Nunito', sans-serif; }
-
-#sidebar {
-    transition: all .3s;
-    z-index: 50;
-}
-#sidebar span {
-    opacity: 0;
-    transition: opacity .2s;
-}
-#sidebar:hover {
-    width: 170px;
-}
-#sidebar:hover span {
-    opacity: 1;
-}
+#sidebar { transition: all .3s; z-index:50; }
+#sidebar span { opacity: 0; transition: opacity .2s; }
+#sidebar:hover { width: 170px; }
+#sidebar:hover span { opacity:1; }
 </style>
 </head>
 
@@ -39,23 +26,17 @@ body {
 <div id="sidebar" class="h-screen w-16 bg-white shadow fixed px-4">
 <ul class="mt-8 space-y-4 text-gray-600">
 
-<li>
-<a href="#" class="flex items-center hover:text-blue-500">
-<i class="fas fa-home w-6"></i><span>Home</span>
-</a>
-</li>
+<li><a href="#" class="flex items-center hover:text-blue-500">
+<i class="fas fa-home w-6"></i><span>Home</span></a></li>
 
-<li>
-<a href="#" class="flex items-center hover:text-blue-500">
-<i class="fas fa-chart-line w-6"></i><span>Reports</span>
-</a>
-</li>
+<li><a href="#" class="flex items-center hover:text-blue-500">
+<i class="fas fa-chart-line w-6"></i><span>Reports</span></a></li>
 
-<li>
-<a href="#" class="flex items-center hover:text-blue-500">
-<i class="fas fa-project-diagram w-6"></i><span>Architecture</span>
-</a>
-</li>
+<li><a href="#" class="flex items-center hover:text-blue-500">
+<i class="fas fa-project-diagram w-6"></i><span>Architecture</span></a></li>
+
+<li><a href="#" class="flex items-center hover:text-blue-500" id="accountsBtn">
+<i class="fas fa-user w-6"></i><span>Accounts</span></a></li>
 
 </ul>
 </div>
@@ -74,107 +55,94 @@ body {
 
 <!-- STATS -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-
 <div class="bg-white p-4 rounded shadow text-center">
 <h3 class="text-xl font-bold text-blue-600">Guest</h3>
-<p class="text-2xl">124</p>
-</div>
+<p class="text-2xl" id="guestCount">0</p></div>
 
 <div class="bg-white p-4 rounded shadow text-center">
 <h3 class="text-xl font-bold text-green-600">Basic</h3>
-<p class="text-2xl">342</p>
-</div>
+<p class="text-2xl" id="basicCount">0</p></div>
 
 <div class="bg-white p-4 rounded shadow text-center">
 <h3 class="text-xl font-bold text-purple-600">Premium</h3>
-<p class="text-2xl">89</p>
-</div>
+<p class="text-2xl" id="premiumCount">0</p></div>
 
 <div class="bg-white p-4 rounded shadow text-center">
 <h3 class="text-xl font-bold text-red-600">Admin</h3>
-<p class="text-2xl">6</p>
-</div>
-
+<p class="text-2xl" id="adminCount">0</p></div>
 </div>
 
 <!-- GRAPHS -->
 <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
 <div class="bg-white p-4 rounded shadow">
 <h2 class="font-bold mb-3">Sensor Logs by User Type</h2>
-<div id="chart1" class="ct-chart ct-major-twelfth"></div>
-</div>
+<div id="chart1" class="ct-chart ct-major-twelfth"></div></div>
 
 <div class="bg-white p-4 rounded shadow">
 <h2 class="font-bold mb-3">System Activity</h2>
-<div id="chart2" class="ct-chart ct-major-twelfth"></div>
-</div>
-
+<div id="chart2" class="ct-chart ct-major-twelfth"></div></div>
 </div>
 
 <!-- ARCHITECTURE -->
 <div class="mt-10 bg-white p-6 rounded shadow">
 <h2 class="text-2xl font-bold mb-4">Architecture</h2>
-
 <div class="grid md:grid-cols-3 gap-6">
-
-<div>
-<h3 class="font-bold text-lg mb-2">Components</h3>
+<div><h3 class="font-bold text-lg mb-2">Components</h3>
 <ul class="list-disc ml-5 text-gray-600">
-<li>ESP32</li>
-<li>Arduino Mega</li>
-<li>Raspberry Pi</li>
-<li>Sensors (Gas, Temp, Presence)</li>
-</ul>
-</div>
+<li>ESP32</li><li>Arduino Mega</li><li>Raspberry Pi</li><li>Sensors (Gas, Temp, Presence)</li></ul></div>
 
-<div>
-<h3 class="font-bold text-lg mb-2">Logs</h3>
+<div><h3 class="font-bold text-lg mb-2">Logs</h3>
 <ul class="list-disc ml-5 text-gray-600">
-<li>Sensor readings</li>
-<li>Relay state changes</li>
-<li>Security events</li>
-<li>System errors</li>
-</ul>
-</div>
+<li>Sensor readings</li><li>Relay state changes</li><li>Security events</li><li>System errors</li></ul></div>
 
-<div>
-<h3 class="font-bold text-lg mb-2">Accounts</h3>
+<div><h3 class="font-bold text-lg mb-2">Accounts</h3>
 <ul class="list-disc ml-5 text-gray-600">
-<li>Guest users</li>
-<li>Basic users</li>
-<li>Premium users</li>
-<li>Administrators</li>
-</ul>
-</div>
+<li>Guest users</li><li>Basic users</li><li>Premium users</li><li>Administrators</li></ul></div>
 
 </div>
 </div>
 
 </div>
 
-<!-- CHARTS -->
 <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 <script>
+const guestCount = document.getElementById("guestCount");
+const basicCount = document.getElementById("basicCount");
+const premiumCount = document.getElementById("premiumCount");
+const adminCount = document.getElementById("adminCount");
+
+async function fetchCounts() {
+    try {
+        const res = await fetch("/api/user_counts");
+        const data = await res.json();
+        guestCount.textContent = data.guest || 0;
+        basicCount.textContent = data.basic || 0;
+        premiumCount.textContent = data.premium || 0;
+        adminCount.textContent = data.admin || 0;
+    } catch(e) { console.error(e); }
+}
+fetchCounts();
+setInterval(fetchCounts, 5000); // refresh every 5s
+
 new Chartist.Line('#chart1', {
 labels: ['Mon','Tue','Wed','Thu','Fri','Sat'],
 series: [
-[5,9,7,8,5,3],   // Guest
-[10,15,12,18,14,11], // Basic
-[3,5,4,6,7,5],   // Premium
-[1,2,1,2,2,1]    // Admin
+[5,9,7,8,5,3],
+[10,15,12,18,14,11],
+[3,5,4,6,7,5],
+[1,2,1,2,2,1]
 ]
-},{
-low:0,
-showArea:true
-});
+},{ low:0, showArea:true });
 
 new Chartist.Bar('#chart2', {
 labels: ['Logs','Alerts','Warnings','Errors'],
-series: [
-[120,45,20,5]
-]
+series: [[120,45,20,5]]
 });
+
+// Accounts button
+document.getElementById("accountsBtn").onclick = () => {
+    window.location.href = "/"; // replace with actual login page route
+};
 </script>
 
 </body>
