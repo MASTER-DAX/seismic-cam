@@ -1,217 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard – RFID System</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
 
-<link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
-<link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+  <link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 
-<style>
-body { background-color: #e8f2ff; }
-.nunito { font-family: 'Nunito', sans-serif; }
-#sidebar { transition: all .3s; z-index:50; }
-#sidebar span { opacity: 0; transition: opacity .2s; }
-#sidebar:hover { width: 170px; }
-#sidebar:hover span { opacity:1; }
-</style>
+  <style>
+    body { background-color: #e8f2ff; }
+    .nunito { font-family: 'Nunito', sans-serif; }
+    #sidebar { transition: all .3s; z-index:50; }
+    #sidebar span { opacity: 0; transition: opacity .2s; }
+    #sidebar:hover { width: 170px; }
+    #sidebar:hover span { opacity:1; }
+  </style>
 </head>
 
 <body class="flex h-screen nunito">
 
-<!-- SIDEBAR -->
-<div id="sidebar" class="h-screen w-16 bg-white shadow fixed px-4">
-<ul class="mt-8 space-y-4 text-gray-600">
+  <!-- SIDEBAR -->
+  <div id="sidebar" class="h-screen w-16 bg-white shadow fixed px-4">
+    <ul class="mt-8 space-y-4 text-gray-600">
+      <li>
+        <a href="#" class="flex items-center hover:text-blue-500">
+          <i class="fas fa-home w-6"></i><span>Home</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="flex items-center hover:text-blue-500">
+          <i class="fas fa-chart-line w-6"></i><span>Reports</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="flex items-center hover:text-blue-500">
+          <i class="fas fa-project-diagram w-6"></i><span>Architecture</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="flex items-center hover:text-blue-500">
+          <i class="fas fa-user w-6"></i><span>Accounts</span>
+        </a>
+      </li>
+    </ul>
+  </div>
 
-<li>
-<a href="#" class="flex items-center hover:text-blue-500">
-<i class="fas fa-home w-6"></i><span>Home</span>
-</a>
-</li>
+  <!-- MAIN -->
+  <div class="flex-1 ml-16 p-6">
 
-<li>
-<a href="#" class="flex items-center hover:text-blue-500">
-<i class="fas fa-chart-line w-6"></i><span>Reports</span>
-</a>
-</li>
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-700">
+        Admin Dashboard – RFID System
+      </h1>
+      <div class="flex items-center space-x-3">
+        <img src="https://i.pravatar.cc/40" class="rounded-full">
+        <span class="font-semibold">Admin</span>
+      </div>
+    </div>
 
-<li>
-<a href="#" class="flex items-center hover:text-blue-500">
-<i class="fas fa-project-diagram w-6"></i><span>Architecture</span>
-</a>
-</li>
+    <!-- STATS -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white p-4 rounded shadow text-center">
+        <h3 class="text-xl font-bold text-blue-600">Guest</h3>
+        <p class="text-2xl" id="guestCount">0</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <h3 class="text-xl font-bold text-green-600">Basic</h3>
+        <p class="text-2xl" id="basicCount">0</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <h3 class="text-xl font-bold text-purple-600">Premium</h3>
+        <p class="text-2xl" id="premiumCount">0</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <h3 class="text-xl font-bold text-red-600">Admin</h3>
+        <p class="text-2xl" id="adminCount">0</p>
+      </div>
+    </div>
 
-<li>
-<a href="#" id="accountsBtn" class="flex items-center hover:text-blue-500">
-<i class="fas fa-user w-6"></i><span>Accounts</span>
-</a>
-</li>
+    <!-- GRAPHS -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-</ul>
-</div>
+      <!-- USER DISTRIBUTION -->
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-bold mb-3">User Distribution</h2>
+        <div id="userChart" class="ct-chart ct-major-twelfth"></div>
+      </div>
 
-<!-- MAIN -->
-<div class="flex-1 ml-16 p-6 overflow-y-auto">
+      <!-- SYSTEM LOGS -->
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-bold mb-3">System Logs</h2>
+        <div id="logChart" class="ct-chart ct-major-twelfth"></div>
+      </div>
 
-<!-- HEADER -->
-<div class="flex justify-between items-center mb-6">
-<h1 class="text-3xl font-bold text-gray-700">
-Admin Dashboard – RFID System
-</h1>
+    </div>
 
-<div class="flex items-center space-x-3">
-<img src="https://i.pravatar.cc/40" class="rounded-full">
-<span class="font-semibold">Admin</span>
-</div>
-</div>
+    <!-- ARCHITECTURE -->
+    <div class="mt-10 bg-white p-6 rounded shadow">
+      <h2 class="text-2xl font-bold mb-4">System Architecture</h2>
+      <div class="grid md:grid-cols-3 gap-6">
 
-<!-- STATS -->
-<div id="dashboardSection">
+        <div>
+          <h3 class="font-bold text-lg mb-2">Controllers</h3>
+          <ul class="list-disc ml-5 text-gray-600">
+            <li>ESP32</li>
+            <li>Arduino Mega</li>
+            <li>Raspberry Pi</li>
+          </ul>
+        </div>
 
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-<div class="bg-white p-4 rounded shadow text-center">
-<h3 class="text-xl font-bold text-blue-600">Guest</h3>
-<p class="text-2xl" id="guestCount">0</p>
-</div>
+        <div>
+          <h3 class="font-bold text-lg mb-2">Sensors</h3>
+          <ul class="list-disc ml-5 text-gray-600">
+            <li>RFID (MFRC522)</li>
+            <li>Gas Sensor</li>
+            <li>Temperature Sensor</li>
+            <li>Presence Sensor</li>
+          </ul>
+        </div>
 
-<div class="bg-white p-4 rounded shadow text-center">
-<h3 class="text-xl font-bold text-green-600">Basic</h3>
-<p class="text-2xl" id="basicCount">0</p>
-</div>
+        <div>
+          <h3 class="font-bold text-lg mb-2">User Levels</h3>
+          <ul class="list-disc ml-5 text-gray-600">
+            <li>Guest</li>
+            <li>Basic</li>
+            <li>Premium</li>
+            <li>Admin</li>
+          </ul>
+        </div>
 
-<div class="bg-white p-4 rounded shadow text-center">
-<h3 class="text-xl font-bold text-purple-600">Premium</h3>
-<p class="text-2xl" id="premiumCount">0</p>
-</div>
+      </div>
+    </div>
 
-<div class="bg-white p-4 rounded shadow text-center">
-<h3 class="text-xl font-bold text-red-600">Admin</h3>
-<p class="text-2xl" id="adminCount">0</p>
-</div>
-</div>
+  </div>
 
-<!-- GRAPHS -->
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-10">
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 
-<div class="bg-white p-4 rounded shadow">
-<h2 class="font-bold mb-3">User Distribution</h2>
-<div id="userChart" class="ct-chart ct-major-twelfth"></div>
-</div>
+  <script>
+    const guestEl = document.getElementById("guestCount");
+    const basicEl = document.getElementById("basicCount");
+    const premiumEl = document.getElementById("premiumCount");
+    const adminEl = document.getElementById("adminCount");
 
-<div class="bg-white p-4 rounded shadow">
-<h2 class="font-bold mb-3">System Logs</h2>
-<div id="logChart" class="ct-chart ct-major-twelfth"></div>
-</div>
+    let userChart;
 
-</div>
+    // FETCH COUNTS FROM BACKEND
+    async function loadUserCounts() {
+      try {
+        const res = await fetch("/api/user_counts");
+        const data = await res.json();
 
-<!-- ARCHITECTURE -->
-<div class="bg-white p-6 rounded shadow">
-<h2 class="text-2xl font-bold mb-4">System Architecture</h2>
+        const guest = data.guest || 0;
+        const basic = data.basic || 0;
+        const premium = data.premium || 0;
+        const admin = data.admin || 0;
 
-<div class="grid md:grid-cols-3 gap-6">
-<div>
-<h3 class="font-bold text-lg mb-2">Controllers</h3>
-<ul class="list-disc ml-5 text-gray-600">
-<li>ESP32</li>
-<li>Arduino Mega</li>
-<li>Raspberry Pi</li>
-</ul>
-</div>
+        guestEl.textContent = guest;
+        basicEl.textContent = basic;
+        premiumEl.textContent = premium;
+        adminEl.textContent = admin;
 
-<div>
-<h3 class="font-bold text-lg mb-2">Sensors</h3>
-<ul class="list-disc ml-5 text-gray-600">
-<li>RFID (MFRC522)</li>
-<li>Gas Sensor</li>
-<li>Temperature Sensor</li>
-<li>Presence Sensor</li>
-</ul>
-</div>
+        renderUserChart(guest, basic, premium, admin);
+      } catch (err) {
+        console.error("Failed to load user counts", err);
+      }
+    }
 
-<div>
-<h3 class="font-bold text-lg mb-2">User Levels</h3>
-<ul class="list-disc ml-5 text-gray-600">
-<li>Guest</li>
-<li>Basic</li>
-<li>Premium</li>
-<li>Admin</li>
-</ul>
-</div>
-</div>
-</div>
+    // USER DISTRIBUTION CHART
+    function renderUserChart(guest, basic, premium, admin) {
+      if (userChart) userChart.detach();
+      userChart = new Chartist.Bar('#userChart', {
+        labels: ['Guest', 'Basic', 'Premium', 'Admin'],
+        series: [[guest, basic, premium, admin]]
+      }, { low: 0 });
+    }
 
-</div>
+    // SYSTEM LOGS (STATIC SAMPLE – pwede mo i-connect sa DB later)
+    new Chartist.Bar('#logChart', {
+      labels: ['Logs', 'Alerts', 'Warnings', 'Errors'],
+      series: [[120, 45, 20, 5]]
+    }, { low: 0 });
 
-<!-- ACCOUNTS SECTION -->
-<div id="accountsSection" class="hidden mt-6">
-<iframe
-  src="/register.html"
-  class="w-full h-[760px] bg-white rounded shadow"
-  frameborder="0">
-</iframe>
-</div>
-
-</div>
-
-<!-- SCRIPTS -->
-<script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
-
-<script>
-const guestEl = document.getElementById("guestCount");
-const basicEl = document.getElementById("basicCount");
-const premiumEl = document.getElementById("premiumCount");
-const adminEl = document.getElementById("adminCount");
-
-const dashboardSection = document.getElementById("dashboardSection");
-const accountsSection = document.getElementById("accountsSection");
-const accountsBtn = document.getElementById("accountsBtn");
-
-let userChart;
-
-accountsBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  dashboardSection.classList.add("hidden");
-  accountsSection.classList.remove("hidden");
-});
-
-async function loadUserCounts() {
-  const res = await fetch("/api/user_counts");
-  const data = await res.json();
-
-  const guest = data.guest || 0;
-  const basic = data.basic || 0;
-  const premium = data.premium || 0;
-  const admin = data.admin || 0;
-
-  guestEl.textContent = guest;
-  basicEl.textContent = basic;
-  premiumEl.textContent = premium;
-  adminEl.textContent = admin;
-
-  renderUserChart(guest, basic, premium, admin);
-}
-
-function renderUserChart(guest, basic, premium, admin) {
-  if (userChart) userChart.detach();
-
-  userChart = new Chartist.Bar('#userChart', {
-    labels: ['Guest', 'Basic', 'Premium', 'Admin'],
-    series: [[guest, basic, premium, admin]]
-  }, { low: 0 });
-}
-
-new Chartist.Bar('#logChart', {
-  labels: ['Logs', 'Alerts', 'Warnings', 'Errors'],
-  series: [[120, 45, 20, 5]]
-}, { low: 0 });
-
-loadUserCounts();
-setInterval(loadUserCounts, 5000);
-</script>
+    // INIT
+    loadUserCounts();
+    setInterval(loadUserCounts, 5000);
+  </script>
 
 </body>
 </html>
