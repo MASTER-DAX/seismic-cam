@@ -133,6 +133,44 @@ def user_counts():
     return jsonify(counts)
 
 # -------------------------------------------------
+# USER LOGIN (UID + NAME)
+# -------------------------------------------------
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json() or {}
+
+    uid = data.get("uid")
+    name = data.get("name")
+
+    if not uid or not name:
+        return jsonify({"error": "uid and name required"}), 400
+
+    user = find_user_by_uid(uid)
+
+    if not user:
+        return jsonify({
+            "success": False,
+            "message": "User not found"
+        }), 401
+
+    # Case-insensitive name check
+    if user.get("name", "").lower() != name.lower():
+        return jsonify({
+            "success": False,
+            "message": "Invalid credentials"
+        }), 401
+
+    return jsonify({
+        "success": True,
+        "user": {
+            "uid": user.get("uid"),
+            "name": user.get("name"),
+            "access_level": user.get("access_level"),
+            "cottage": user.get("cottage")
+        }
+    })
+
+# -------------------------------------------------
 # RUN SERVER
 # -------------------------------------------------
 if __name__ == "__main__":
