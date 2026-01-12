@@ -97,6 +97,34 @@ def check_access():
 # -------------------------------------------------
 # Admin → Register Card
 # -------------------------------------------------
+
+@app.route("/api/login_user", methods=["POST"])
+def login_user():
+    data = request.get_json() or {}
+    name = data.get("name")
+    employee_id = data.get("employee_id")
+
+    if not name or not employee_id:
+        return jsonify({"success": False, "message": "name and employee_id required"}), 400
+
+    # Case-insensitive search for name + exact employee_id
+    user = users.find_one(
+        {"name": {"$regex": f"^{name}$", "$options": "i"}, "employee_id": employee_id},
+        {"_id": 0}
+    )
+
+    if not user:
+        return jsonify({"success": False, "message": "User not found"}), 401
+
+    return jsonify({
+        "success": True,
+        "user": {
+            "name": user.get("name"),
+            "employee_id": user.get("employee_id"),
+            "access_level": user.get("access_level"),
+            "cottage": user.get("cottage")
+        }
+    })
 @app.route("/api/register_card", methods=["POST"])
 def register_card():
     data = request.get_json() or {}
