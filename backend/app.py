@@ -1,195 +1,222 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
+import os
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
+from flask_socketio import SocketIO
+from db import (
+    find_user_by_uid,
+    register_user,
+    trigger_buzzer_event,
+    count_users_by_access_level
+)
 
-  <link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">-
-  <link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+# -------------------------------------------------
+# FLASK CONFIG
+# -------------------------------------------------
+app = Flask(__name__, static_folder="../frontend", static_url_path="")
+CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
-  <style>
-    body { background-color: #e8f2ff; }
-    .nunito { font-family: 'Nunito', sans-serif; }
-    #sidebar { transition: all .3s; z-index:50; }
-    #sidebar span { opacity: 0; transition: opacity .2s; }
-    #sidebar:hover { width: 170px; }
-    #sidebar:hover span { opacity:1; }
-  </style>
-</head>
+# -------------------------------------------------
+# HEALTH CHECK
+# -------------------------------------------------
+@app.route("/health")
+def health():
+    return "OK", 200
 
-<body class="flex h-screen nunito">
+# -------------------------------------------------
+# SERVE FRONTEND
+# -------------------------------------------------
+@app.route("/")
+def index():
+    return send_from_directory(app.static_folder, "index.html")
 
-  <!-- SIDEBAR -->
-  <div id="sidebar" class="h-screen w-16 bg-white shadow fixed px-4">
-    <ul class="mt-8 space-y-4 text-gray-600">
-      <li>
-        <a href="#" class="flex items-center hover:text-blue-500">
-          <i class="fas fa-home w-6"></i><span>Home</span>
-        </a>
-      </li>
-      <li>
-        <a href="#" class="flex items-center hover:text-blue-500">
-          <i class="fas fa-chart-line w-6"></i><span>Reports</span>
-        </a>
-      </li>
-      <li>
-        <a href="#" class="flex items-center hover:text-blue-500">
-          <i class="fas fa-project-diagram w-6"></i><span>Architecture</span>
-        </a>
-      </li>
-      <li>
-        <a href="#" class="flex items-center hover:text-blue-500">
-          <i class="fas fa-user w-6"></i><span>Accounts</span>
-        </a>
-      </li>
-    </ul>
-  </div>
+# -------------------------------------------------
+# ESP32 → Server: Tap Card
+# -------------------------------------------------
+@app.route("/api/tap", methods=["POST"])
+def tap_card():
+    data = request.get_json() or {}
+    
+    uid = data.get("uid")
+    reader_cottage = data.get("reader_cottage")
+    
+    if not uid:
+        return jsonify({"error": "missing uid"}), 400
+    if not reader_cottage:
+        return jsonify({"error": "missing reader_cottage"}), 400
 
-  <!-- MAIN -->
-  <div class="flex-1 ml-16 p-6">
+    trigger_buzzer_event(uid)
+    socketio.emit("card_tapped", {"uid": uid})
+    user = find_user_by_uid(uid)
 
-    <!-- HEADER -->
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-700">
-        Admin Dashboard - RFID System
-      </h1>
-      <div class="flex items-center space-x-3">
-        <img src="https://i.pravatar.cc/40" class="rounded-full">
-        <span class="font-semibold">Admin</span>
-      </div>
-    </div>
+    return jsonify({
+        "status": "ok",
+        "registered": bool(user),
+        "user": user
+    })
 
-    <!-- STATS -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white p-4 rounded shadow text-center">
-        <h3 class="text-xl font-bold text-blue-600">Guest</h3>
-        <p class="text-2xl" id="guestCount">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <h3 class="text-xl font-bold text-green-600">Basic</h3>
-        <p class="text-2xl" id="basicCount">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <h3 class="text-xl font-bold text-purple-600">Premium</h3>
-        <p class="text-2xl" id="premiumCount">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <h3 class="text-xl font-bold text-red-600">Admin</h3>
-        <p class="text-2xl" id="adminCount">0</p>
-      </div>
-    </div>
+# -------------------------------------------------
+# ESP32 CHECK ACCESS
+# -------------------------------------------------
+@app.route("/api/check_access", methods=["POST"])
+def check_access():
+    data = request.get_json() or {}
 
-    <!-- GRAPHS -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    uid = data.get("uid")
+    reader_cottage = data.get("reader_cottage")
 
-      <!-- USER DISTRIBUTION -->
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="font-bold mb-3">User Distribution</h2>
-        <div id="userChart" class="ct-chart ct-major-twelfth"></div>
-      </div>
+    if not uid:
+        return jsonify({"error": "missing uid"}), 400
+    if not reader_cottage:
+        return jsonify({"error": "missing reader_cottage"}), 400
 
-      <!-- SYSTEM LOGS -->
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="font-bold mb-3">System Logs</h2>
-        <div id="logChart" class="ct-chart ct-major-twelfth"></div>
-      </div>
+    user = find_user_by_uid(uid)
 
-    </div>
+    if not user:
+        return jsonify({
+            "access": "denied",
+            "reason": "Card not registered"
+        })
 
-    <!-- ARCHITECTURE -->
-    <div class="mt-10 bg-white p-6 rounded shadow">
-      <h2 class="text-2xl font-bold mb-4">System Architecture</h2>
-      <div class="grid md:grid-cols-3 gap-6">
+    if user.get("cottage") != reader_cottage:
+        return jsonify({
+            "access": "denied",
+            "reason": "Card assigned to different cottage"
+        })
 
-        <div>
-          <h3 class="font-bold text-lg mb-2">Controllers</h3>
-          <ul class="list-disc ml-5 text-gray-600">
-            <li>ESP32</li>
-            <li>Arduino Mega</li>
-            <li>Raspberry Pi</li>
-          </ul>
-        </div>
+    return jsonify({
+        "access": "granted",
+        "reason": "Valid card & correct cottage",
+        "user": {
+            "name": user.get("name"),
+            "employee_id": user.get("employee_id"),
+            "access_level": user.get("access_level")
+        }
+    })
 
-        <div>
-          <h3 class="font-bold text-lg mb-2">Sensors</h3>
-          <ul class="list-disc ml-5 text-gray-600">
-            <li>RFID (MFRC522)</li>
-            <li>Gas Sensor</li>
-            <li>Temperature Sensor</li>
-            <li>Presence Sensor</li>
-          </ul>
-        </div>
+# -------------------------------------------------
+# Admin → Register Card
+# -------------------------------------------------
+@app.route("/api/register_card", methods=["POST"])
+def register_card():
+    data = request.get_json() or {}
 
-        <div>
-          <h3 class="font-bold text-lg mb-2">User Levels</h3>
-          <ul class="list-disc ml-5 text-gray-600">
-            <li>Guest</li>
-            <li>Basic</li>
-            <li>Premium</li>
-            <li>Admin</li>
-          </ul>
-        </div>
+    uid = data.get("uid")
+    name = data.get("name")
+    employee_id = data.get("employee_id")
+    access_level = data.get("access_level")
+    valid_until = data.get("valid_until")
+    cottage = data.get("cottage")
 
-      </div>
-    </div>
+    if not uid or not name:
+        return jsonify({"error": "uid and name required"}), 400
 
-  </div>
-
-  <!-- SCRIPTS -->
-  <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
-
-  <script>
-    const guestEl = document.getElementById("guestCount");
-    const basicEl = document.getElementById("basicCount");
-    const premiumEl = document.getElementById("premiumCount");
-    const adminEl = document.getElementById("adminCount");
-
-    let userChart;
-
-    // FETCH COUNTS FROM BACKEND
-    async function loadUserCounts() {
-      try {
-        const res = await fetch("/api/user_counts");
-        const data = await res.json();
-
-        const guest = data.guest || 0;
-        const basic = data.basic || 0;
-        const premium = data.premium || 0;
-        const admin = data.admin || 0;
-
-        guestEl.textContent = guest;
-        basicEl.textContent = basic;
-        premiumEl.textContent = premium;
-        adminEl.textContent = admin;
-
-        renderUserChart(guest, basic, premium, admin);
-      } catch (err) {
-        console.error("Failed to load user counts", err);
-      }
+    doc = {
+        "uid": uid,
+        "name": name,
+        "employee_id": employee_id,
+        "access_level": access_level,
+        "valid_until": valid_until,
+        "cottage": cottage
     }
 
-    // USER DISTRIBUTION CHART
-    function renderUserChart(guest, basic, premium, admin) {
-      if (userChart) userChart.detach();
-      userChart = new Chartist.Bar('#userChart', {
-        labels: ['Guest', 'Basic', 'Premium', 'Admin'],
-        series: [[guest, basic, premium, admin]]
-      }, { low: 0 });
-    }
+    register_user(doc)
 
-    // SYSTEM LOGS (STATIC SAMPLE - pwede mo i-connect sa DB later)
-    new Chartist.Bar('#logChart', {
-      labels: ['Logs', 'Alerts', 'Warnings', 'Errors'],
-      series: [[120, 45, 20, 5]]
-    }, { low: 0 });
+    return jsonify({"status": "saved"})
 
-    // INIT
-    loadUserCounts();
-    setInterval(loadUserCounts, 5000);
-  </script>
+# -------------------------------------------------
+# DASHBOARD: Get counts by access level
+# -------------------------------------------------
+@app.route("/api/user_counts")
+def user_counts():
+    counts = count_users_by_access_level()
+    return jsonify(counts)
 
-</body>
-</html>
+# -------------------------------------------------
+# USER LOGIN (UID + NAME)
+# -------------------------------------------------
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json() or {}
+
+    uid = data.get("uid")
+    name = data.get("name")
+
+    if not uid or not name:
+        return jsonify({"error": "uid and name required"}), 400
+
+    user = find_user_by_uid(uid)
+
+    if not user:
+        return jsonify({
+            "success": False,
+            "message": "User not found"
+        }), 401
+
+    # Case-insensitive name check
+    if user.get("name", "").lower() != name.lower():
+        return jsonify({
+            "success": False,
+            "message": "Invalid credentials"
+        }), 401
+
+    return jsonify({
+        "success": True,
+        "user": {
+            "uid": user.get("uid"),
+            "name": user.get("name"),
+            "access_level": user.get("access_level"),
+            "cottage": user.get("cottage")
+        }
+    })
+
+# -------------------------------------------------
+# RUN SERVER
+# -------------------------------------------------
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    socketio.run(app, host="0.0.0.0", port=port)
+
+
+
+
+
+db.py
+from pymongo import MongoClient
+import os
+from datetime import datetime
+
+client = MongoClient(os.getenv("MONGO_URI"))
+db = client["rfid_system"]
+
+users = db["users"]
+taps = db["taps"]
+
+# ------------------------
+# USER OPERATIONS
+# ------------------------
+def register_user(doc):
+    doc["created_at"] = datetime.utcnow()
+    users.replace_one({"uid": doc["uid"]}, doc, upsert=True)
+    return True
+
+def find_user_by_uid(uid):
+    return users.find_one({"uid": uid}, {"_id": 0})
+
+def trigger_buzzer_event(uid):
+    taps.insert_one({"uid": uid, "ts": datetime.utcnow()})
+
+# ------------------------
+# DASHBOARD STATS
+# ------------------------
+def count_users_by_access_level():
+    pipeline = [
+        {"$group": {"_id": "$access_level", "count": {"$sum": 1}}}
+    ]
+    result = users.aggregate(pipeline)
+    counts = {"guest": 0, "basic": 0, "premium": 0, "admin": 0}
+    for doc in result:
+        key = doc["_id"].lower()
+        if key in counts:
+            counts[key] = doc["count"]
+    return counts
