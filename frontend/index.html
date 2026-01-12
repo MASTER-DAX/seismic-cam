@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard</title>
+<title>Admin Dashboard – RFID System</title>
 
 <link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
@@ -45,7 +45,7 @@ body { background-color: #e8f2ff; }
 </li>
 
 <li>
-<a href="#" class="flex items-center hover:text-blue-500">
+<a href="#" id="accountsBtn" class="flex items-center hover:text-blue-500">
 <i class="fas fa-user w-6"></i><span>Accounts</span>
 </a>
 </li>
@@ -54,7 +54,7 @@ body { background-color: #e8f2ff; }
 </div>
 
 <!-- MAIN -->
-<div class="flex-1 ml-16 p-6">
+<div class="flex-1 ml-16 p-6 overflow-y-auto">
 
 <!-- HEADER -->
 <div class="flex justify-between items-center mb-6">
@@ -69,8 +69,9 @@ Admin Dashboard – RFID System
 </div>
 
 <!-- STATS -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+<div id="dashboardSection">
 
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
 <div class="bg-white p-4 rounded shadow text-center">
 <h3 class="text-xl font-bold text-blue-600">Guest</h3>
 <p class="text-2xl" id="guestCount">0</p>
@@ -90,19 +91,16 @@ Admin Dashboard – RFID System
 <h3 class="text-xl font-bold text-red-600">Admin</h3>
 <p class="text-2xl" id="adminCount">0</p>
 </div>
-
 </div>
 
 <!-- GRAPHS -->
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-10">
 
-<!-- USER DISTRIBUTION -->
 <div class="bg-white p-4 rounded shadow">
 <h2 class="font-bold mb-3">User Distribution</h2>
 <div id="userChart" class="ct-chart ct-major-twelfth"></div>
 </div>
 
-<!-- SYSTEM LOGS -->
 <div class="bg-white p-4 rounded shadow">
 <h2 class="font-bold mb-3">System Logs</h2>
 <div id="logChart" class="ct-chart ct-major-twelfth"></div>
@@ -111,11 +109,10 @@ Admin Dashboard – RFID System
 </div>
 
 <!-- ARCHITECTURE -->
-<div class="mt-10 bg-white p-6 rounded shadow">
+<div class="bg-white p-6 rounded shadow">
 <h2 class="text-2xl font-bold mb-4">System Architecture</h2>
 
 <div class="grid md:grid-cols-3 gap-6">
-
 <div>
 <h3 class="font-bold text-lg mb-2">Controllers</h3>
 <ul class="list-disc ml-5 text-gray-600">
@@ -144,8 +141,18 @@ Admin Dashboard – RFID System
 <li>Admin</li>
 </ul>
 </div>
+</div>
+</div>
 
 </div>
+
+<!-- ACCOUNTS SECTION -->
+<div id="accountsSection" class="hidden mt-6">
+<iframe
+  src="/register.html"
+  class="w-full h-[760px] bg-white rounded shadow"
+  frameborder="0">
+</iframe>
 </div>
 
 </div>
@@ -159,51 +166,49 @@ const basicEl = document.getElementById("basicCount");
 const premiumEl = document.getElementById("premiumCount");
 const adminEl = document.getElementById("adminCount");
 
+const dashboardSection = document.getElementById("dashboardSection");
+const accountsSection = document.getElementById("accountsSection");
+const accountsBtn = document.getElementById("accountsBtn");
+
 let userChart;
 
-// FETCH COUNTS FROM BACKEND
-async function loadUserCounts() {
-    try {
-        const res = await fetch("/api/user_counts");
-        const data = await res.json();
-
-        const guest = data.guest || 0;
-        const basic = data.basic || 0;
-        const premium = data.premium || 0;
-        const admin = data.admin || 0;
-
-        guestEl.textContent = guest;
-        basicEl.textContent = basic;
-        premiumEl.textContent = premium;
-        adminEl.textContent = admin;
-
-        renderUserChart(guest, basic, premium, admin);
-    } catch (err) {
-        console.error("Failed to load user counts", err);
-    }
-}
-
-// USER DISTRIBUTION CHART
-function renderUserChart(guest, basic, premium, admin) {
-    if (userChart) userChart.detach();
-
-    userChart = new Chartist.Bar('#userChart', {
-        labels: ['Guest', 'Basic', 'Premium', 'Admin'],
-        series: [[guest, basic, premium, admin]]
-    }, {
-        low: 0
-    });
-}
-
-// SYSTEM LOGS (STATIC SAMPLE – pwede mo i-connect sa DB later)
-new Chartist.Bar('#logChart', {
-    labels: ['Logs', 'Alerts', 'Warnings', 'Errors'],
-    series: [[120, 45, 20, 5]]
-}, {
-    low: 0
+accountsBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  dashboardSection.classList.add("hidden");
+  accountsSection.classList.remove("hidden");
 });
 
-// INIT
+async function loadUserCounts() {
+  const res = await fetch("/api/user_counts");
+  const data = await res.json();
+
+  const guest = data.guest || 0;
+  const basic = data.basic || 0;
+  const premium = data.premium || 0;
+  const admin = data.admin || 0;
+
+  guestEl.textContent = guest;
+  basicEl.textContent = basic;
+  premiumEl.textContent = premium;
+  adminEl.textContent = admin;
+
+  renderUserChart(guest, basic, premium, admin);
+}
+
+function renderUserChart(guest, basic, premium, admin) {
+  if (userChart) userChart.detach();
+
+  userChart = new Chartist.Bar('#userChart', {
+    labels: ['Guest', 'Basic', 'Premium', 'Admin'],
+    series: [[guest, basic, premium, admin]]
+  }, { low: 0 });
+}
+
+new Chartist.Bar('#logChart', {
+  labels: ['Logs', 'Alerts', 'Warnings', 'Errors'],
+  series: [[120, 45, 20, 5]]
+}, { low: 0 });
+
 loadUserCounts();
 setInterval(loadUserCounts, 5000);
 </script>
