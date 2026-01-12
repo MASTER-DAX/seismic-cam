@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RFID Admin — Register Card</title>
+  <meta name="description" content="Admin interface to register RFID cards (ESP32 + MFRC522 backend)" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --primary: #1f6feb;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system; background:var(--bg); color:#111827; }
+    .wrap { min-height:100%; display:flex; align-items:center; justify-content:center; padding:24px; }
+
+    .card {
+      width: 430px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+      padding: 22px;
+    }
+    h1 { margin:0 0 6px 0; font-size:20px; }
+    p.lead { margin:0 0 14px 0; color:var(--muted); font-size:13px; }
+
+    #notice { font-size:13px; color:var(--muted); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    #notice .dot { width:10px; height:10px; border-radius:50%; background:#fde68a; box-shadow:0 0 0 4px rgba(250,204,21,0.06); }
+
+    form label { display:block; margin-top:10px; font-size:13px; color:#374151; }
+    input[type="text"], input[type="date"], select {
+      width:100%; padding:10px 12px; margin-top:6px; border-radius:8px;
+      border:1px solid #e6e9ee; background:#fcfdff; font-size:14px;
+    }
+    input[readonly] { background:#f3f4f6; }
+
+    .row { display:flex; gap:10px; }
+    .col { flex:1; }
+
+    .actions { display:flex; gap:8px; margin-top:16px; }
+    button {
+      padding:10px 14px; border-radius:10px; border:0; cursor:pointer;
+      background:var(--primary); color:#fff; font-weight:600;
+    }
+    button.secondary {
+      background:transparent; color:var(--primary);
+      border:1px solid rgba(31,111,235,0.25);
+    }
+
+    #log {
+      margin-top:14px; font-size:13px; color:#374151; border-radius:8px;
+      background:#fbfdff; padding:10px; border:1px dashed #eef2ff; min-height:36px;
+    }
+    .small { font-size:12px; color:var(--muted); margin-top:6px; }
+
+    @media (max-width:480px) {
+      .card { width:100%; padding:16px; border-radius:10px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <main class="card">
+      <h1>RFID Card Registration</h1>
+      <p class="lead">Tap a card on your assigned reader. UID will appear automatically.</p>
+
+      <div id="notice">
+        <span class="dot"></span><span id="noticeText">Waiting for card tap…</span>
+      </div>
+
+      <form id="regForm" autocomplete="off">
+        <label for="cottage">Cottage Assignment
+          <select id="cottage" name="cottage">
+            <option value="COTTAGE-1">Cottage 1</option>
+            <option value="COTTAGE-2">Cottage 2</option>
+            <option value="COTTAGE-3">Cottage 3</option>
+            <option value="COTTAGE-4">Cottage 4</option>
+          </select>
+        </label>
+
+        <label for="uid">Card UID
+          <input id="uid" type="text" readonly placeholder="Tap a card...">
+        </label>
+
+        <label for="name">Name
+          <input id="name" type="text" required placeholder="Full name">
+        </label>
+
+        <div class="row">
+          <div class="col">
+            <label for="employee_id">Employee ID
+              <input id="employee_id" type="text" placeholder="Optional">
+            </label>
+          </div>
+
+          <div class="col">
+            <label for="access_level">Access Level
+              <select id="access_level">
+                <option value="user">User</option>
+                <option value="staff">Staff</option>
+                <option value="admin">Admin</option>
+                <option value="guest">Guest</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <label for="valid_until">Valid Until
+          <input id="valid_until" type="date">
+        </label>
+
+        <div class="actions">
+          <button type="submit" id="saveBtn">Save</button>
+          <button type="button" class="secondary" id="clearBtn">Clear</button>
+        </div>
+
+        <div id="log">No activity yet.</div>
+        <div class="small">Tip: Make sure ESP32 is connected & backend is reachable.</div>
+      </form>
+    </main>
+  </div>
+
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script>
+    const SERVER = "";  
+    const socket = io(SERVER || window.location.origin);
+
+    const uidInput = document.getElementById("uid");
+    const noticeText = document.getElementById("noticeText");
+    const log = document.getElementById("log");
+    const form = document.getElementById("regForm");
+
+    function appendLog(msg, replace = true) {
+      const ts = new Date().toLocaleTimeString();
+      log.textContent = `[${ts}] ${msg}`;
+    }
+
+    socket.on("connect", () => appendLog("Connected."));
+    socket.on("disconnect", () => appendLog("Disconnected."));
+
+    socket.on("card_tapped", (data) => {
+      if (!data || !data.uid) return;
+      uidInput.value = data.uid;
+      noticeText.textContent = "Card detected: " + data.uid;
+      appendLog("Card tapped: " + data.uid);
+      document.getElementById("name").focus();
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        uid: uidInput.value.trim(),
+        name: document.getElementById("name").value.trim(),
+        employee_id: document.getElementById("employee_id").value.trim(),
+        access_level: document.getElementById("access_level").value,
+        valid_until: document.getElementById("valid_until").value,
+        cottage: document.getElementById("cottage").value
+      };
+
+      if (!payload.uid) return appendLog("Tap a card first.");
+      if (!payload.name) return appendLog("Name required.");
+
+      appendLog("Saving…");
+
+      const res = await fetch("/api/register_card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        appendLog("Card saved successfully ✔");
+        form.reset();
+        uidInput.value = "";
+        noticeText.textContent = "Tap next card…";
+      } else {
+        appendLog("Error: " + (json.error || "Unknown"));
+      }
+    });
+
+    document.getElementById("clearBtn").onclick = () => {
+      form.reset();
+      uidInput.value = "";
+      appendLog("Form cleared");
+    };
+  </script>
+</body>
+</html>
