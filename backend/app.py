@@ -6,7 +6,7 @@
   <title>Admin Dashboard</title>
 
   <link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">-
   <link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
 
@@ -54,7 +54,7 @@
     <!-- HEADER -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold text-gray-700">
-        Admin Dashboard – RFID System
+        Admin Dashboard - RFID System
       </h1>
       <div class="flex items-center space-x-3">
         <img src="https://i.pravatar.cc/40" class="rounded-full">
@@ -180,7 +180,7 @@
       }, { low: 0 });
     }
 
-    // SYSTEM LOGS (STATIC SAMPLE – pwede mo i-connect sa DB later)
+    // SYSTEM LOGS (STATIC SAMPLE - pwede mo i-connect sa DB later)
     new Chartist.Bar('#logChart', {
       labels: ['Logs', 'Alerts', 'Warnings', 'Errors'],
       series: [[120, 45, 20, 5]]
