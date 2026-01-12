@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Smart Cottage System — RFID</title>
+  <title>Smart Cottage System — Accounts</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
 
   <style>
     :root {
@@ -17,27 +20,78 @@
     html, body {
       height: 100%;
       margin: 0;
-      font-family: Inter, system-ui, -apple-system;
+      font-family: 'Nunito', system-ui, -apple-system;
       background: var(--bg);
       color: #111827;
     }
 
     body {
       display: flex;
+    }
+
+    /* SIDEBAR (same as dashboard) */
+    #sidebar {
+      width: 64px;
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      padding: 16px;
+      transition: all .3s;
+    }
+
+    #sidebar span {
+      opacity: 0;
+      transition: opacity .2s;
+      white-space: nowrap;
+    }
+
+    #sidebar:hover {
+      width: 170px;
+    }
+
+    #sidebar:hover span {
+      opacity: 1;
+    }
+
+    #sidebar ul {
+      margin-top: 32px;
+      list-style: none;
+      padding: 0;
+      color: #4b5563;
+    }
+
+    #sidebar li {
+      margin-bottom: 16px;
+    }
+
+    #sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    #sidebar a:hover {
+      color: var(--primary);
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      flex: 1;
+      display: flex;
       flex-direction: column;
     }
 
-    /* MAIN LAYOUT */
     .page {
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 32px;
       gap: 80px;
     }
 
-    /* LEFT SIDE (HEADER LIKE FACEBOOK) */
+    /* LEFT BRANDING */
     .branding {
       max-width: 420px;
     }
@@ -55,7 +109,7 @@
       color: #1f2937;
     }
 
-    /* RIGHT SIDE (FORM, NO BOX) */
+    /* FORM */
     .form-wrap {
       width: 420px;
     }
@@ -74,7 +128,6 @@
       border-radius: 8px;
       border: 1px solid #d1d5db;
       font-size: 14px;
-      background: #ffffff;
     }
 
     input[readonly] {
@@ -118,7 +171,6 @@
       min-height: 32px;
     }
 
-    /* FOOTER */
     footer {
       text-align: center;
       padding: 16px;
@@ -132,134 +184,108 @@
         gap: 40px;
         text-align: center;
       }
-      .branding h1 { font-size: 40px; }
-      .branding p { font-size: 18px; }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="page">
-
-    <!-- LEFT HEADER -->
-    <div class="branding">
-      <h1>Smart Cottage System</h1>
-      <p>Innovation at the Heart of Home</p>
-    </div>
-
-    <!-- RIGHT FORM -->
-    <div class="form-wrap">
-      <form id="regForm" autocomplete="off">
-
-        <label>Cottage Assignment
-          <select id="cottage">
-            <option value="COTTAGE-1">Cottage 1</option>
-            <option value="COTTAGE-2">Cottage 2</option>
-            <option value="COTTAGE-3">Cottage 3</option>
-            <option value="COTTAGE-4">Cottage 4</option>
-          </select>
-        </label>
-
-        <label>Card UID
-          <input id="uid" type="text" readonly placeholder="Tap a card...">
-        </label>
-
-        <label>Name
-          <input id="name" type="text" required placeholder="Full name">
-        </label>
-
-        <div class="row">
-          <div class="col">
-            <label>Employee ID
-              <input id="employee_id" type="text">
-            </label>
-          </div>
-          <div class="col">
-            <label>Access Level
-              <select id="access_level">
-                <option value="user">User</option>
-                <option value="staff">Staff</option>
-                <option value="admin">Admin</option>
-                <option value="guest">Guest</option>
-              </select>
-            </label>
-          </div>
-        </div>
-
-        <label>Valid Until
-          <input id="valid_until" type="date">
-        </label>
-
-        <div class="actions">
-          <button type="submit">Save</button>
-          <button type="button" class="secondary" id="clearBtn">Clear</button>
-        </div>
-
-        <div id="log">No activity yet.</div>
-      </form>
-    </div>
-
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <ul>
+      <li>
+        <a href="/index.html">
+          <i class="fas fa-home w-6"></i><span>Home</span>
+        </a>
+      </li>
+      <li>
+        <a href="#">
+          <i class="fas fa-chart-line w-6"></i><span>Reports</span>
+        </a>
+      </li>
+      <li>
+        <a href="#">
+          <i class="fas fa-project-diagram w-6"></i><span>Architecture</span>
+        </a>
+      </li>
+      <li>
+        <a href="/accounts.html">
+          <i class="fas fa-user w-6"></i><span>Accounts</span>
+        </a>
+      </li>
+    </ul>
   </div>
 
-  <footer>
-    © Smart Cottage 2026
-  </footer>
+  <!-- MAIN -->
+  <div class="main">
 
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-  <script>
-    const socket = io(window.location.origin);
+    <div class="page">
 
-    const uidInput = document.getElementById("uid");
-    const log = document.getElementById("log");
-    const form = document.getElementById("regForm");
+      <!-- LEFT HEADER -->
+      <div class="branding">
+        <h1>Smart Cottage System</h1>
+        <p>Innovation at the Heart of Home</p>
+      </div>
 
-    function appendLog(msg) {
-      const ts = new Date().toLocaleTimeString();
-      log.textContent = `[${ts}] ${msg}`;
-    }
+      <!-- RIGHT FORM -->
+      <div class="form-wrap">
+        <form id="regForm" autocomplete="off">
 
-    socket.on("card_tapped", data => {
-      if (!data?.uid) return;
-      uidInput.value = data.uid;
-      appendLog("Card tapped: " + data.uid);
-    });
+          <label>Cottage Assignment
+            <select id="cottage">
+              <option value="COTTAGE-1">Cottage 1</option>
+              <option value="COTTAGE-2">Cottage 2</option>
+              <option value="COTTAGE-3">Cottage 3</option>
+              <option value="COTTAGE-4">Cottage 4</option>
+            </select>
+          </label>
 
-    form.addEventListener("submit", async e => {
-      e.preventDefault();
+          <label>Card UID
+            <input id="uid" type="text" readonly placeholder="Tap a card...">
+          </label>
 
-      const payload = {
-        uid: uidInput.value,
-        name: name.value,
-        employee_id: employee_id.value,
-        access_level: access_level.value,
-        valid_until: valid_until.value,
-        cottage: cottage.value
-      };
+          <label>Name
+            <input id="name" type="text" required>
+          </label>
 
-      if (!payload.uid) return appendLog("Tap a card first.");
+          <div class="row">
+            <div class="col">
+              <label>Employee ID
+                <input id="employee_id" type="text">
+              </label>
+            </div>
+            <div class="col">
+              <label>Access Level
+                <select id="access_level">
+                  <option value="user">User</option>
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                  <option value="guest">Guest</option>
+                </select>
+              </label>
+            </div>
+          </div>
 
-      appendLog("Saving…");
+          <label>Valid Until
+            <input id="valid_until" type="date">
+          </label>
 
-      const res = await fetch("/api/register_card", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+          <div class="actions">
+            <button type="submit">Save</button>
+            <button type="button" class="secondary" id="clearBtn">Clear</button>
+          </div>
 
-      appendLog(res.ok ? "Saved successfully" : "Error saving");
-      if (res.ok) {
-        form.reset();
-        uidInput.value = "";
-      }
-    });
+          <div id="log">No activity yet.</div>
+        </form>
+      </div>
 
-    clearBtn.onclick = () => {
-      form.reset();
-      uidInput.value = "";
-      appendLog("Form cleared");
-    };
-  </script>
+    </div>
+
+    <footer>
+      © Smart Cottage 2026
+    </footer>
+
+  </div>
 
 </body>
 </html>
