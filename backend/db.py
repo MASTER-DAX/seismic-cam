@@ -11,6 +11,14 @@ taps = db["taps"]
 # ------------------------
 # USER OPERATIONS
 # ------------------------
+
+def find_user_by_name_and_employee(name, employee_id):
+    return users.find_one(
+        {"name": {"$regex": f"^{name}$", "$options": "i"}, "employee_id": employee_id},
+        {"_id": 0}
+    )
+
+
 def register_user(doc):
     doc["created_at"] = datetime.utcnow()
     users.replace_one({"uid": doc["uid"]}, doc, upsert=True)
