@@ -3,84 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Smart Cottage System — Accounts</title>
-
+  <title>Smart Cottage System — Register Card</title>
   <link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
-
   <style>
     :root {
       --bg: #e8f2ff;
       --primary: #1f6feb;
       --muted: #6b7280;
+      --card-bg: #fff;
     }
 
     * { box-sizing: border-box; }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: 'Nunito', system-ui, -apple-system;
-      background: var(--bg);
-      color: #111827;
-    }
+    html, body { height: 100%; margin: 0; font-family: 'Nunito', system-ui, -apple-system; background: var(--bg); color: #111827; }
 
-    body {
-      display: flex;
-    }
+    body { display: flex; }
 
-    /* SIDEBAR (same as dashboard) */
+    /* SIDEBAR */
     #sidebar {
       width: 64px;
       background: #ffffff;
       box-shadow: 0 4px 10px rgba(0,0,0,0.08);
       padding: 16px;
-      transition: all .3s;
+      transition: all 0.3s;
     }
-
-    #sidebar span {
-      opacity: 0;
-      transition: opacity .2s;
-      white-space: nowrap;
-    }
-
-    #sidebar:hover {
-      width: 170px;
-    }
-
-    #sidebar:hover span {
-      opacity: 1;
-    }
-
-    #sidebar ul {
-      margin-top: 32px;
-      list-style: none;
-      padding: 0;
-      color: #4b5563;
-    }
-
-    #sidebar li {
-      margin-bottom: 16px;
-    }
-
-    #sidebar a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: inherit;
-    }
-
-    #sidebar a:hover {
-      color: var(--primary);
-    }
+    #sidebar span { opacity: 0; transition: opacity 0.2s; white-space: nowrap; }
+    #sidebar:hover { width: 170px; }
+    #sidebar:hover span { opacity: 1; }
+    #sidebar ul { margin-top: 32px; list-style: none; padding: 0; color: #4b5563; }
+    #sidebar li { margin-bottom: 16px; }
+    #sidebar a { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+    #sidebar a:hover { color: var(--primary); }
 
     /* MAIN CONTENT */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
+    .main { flex: 1; display: flex; flex-direction: column; }
 
     .page {
       flex: 1;
@@ -92,98 +49,35 @@
     }
 
     /* LEFT BRANDING */
-    .branding {
-      max-width: 420px;
-    }
-
-    .branding h1 {
-      font-size: 48px;
-      margin: 0;
-      color: var(--primary);
-      font-weight: 800;
-    }
-
-    .branding p {
-      margin-top: 12px;
-      font-size: 22px;
-      color: #1f2937;
-    }
+    .branding { max-width: 420px; }
+    .branding h1 { font-size: 48px; margin: 0; color: var(--primary); font-weight: 800; }
+    .branding p { margin-top: 12px; font-size: 22px; color: #1f2937; }
 
     /* FORM */
     .form-wrap {
       width: 420px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.08);
     }
 
-    label {
-      display: block;
-      margin-top: 12px;
-      font-size: 13px;
-      color: #374151;
-    }
+    label { display: block; margin-top: 12px; font-size: 13px; color: #374151; }
+    input, select { width: 100%; padding: 12px 14px; margin-top: 6px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; }
+    input[readonly] { background: #f3f4f6; }
 
-    input, select {
-      width: 100%;
-      padding: 12px 14px;
-      margin-top: 6px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      font-size: 14px;
-    }
-
-    input[readonly] {
-      background: #f3f4f6;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-    }
-
+    .row { display: flex; gap: 10px; }
     .col { flex: 1; }
 
-    .actions {
-      margin-top: 18px;
-      display: flex;
-      gap: 10px;
-    }
+    .actions { margin-top: 18px; display: flex; gap: 10px; }
+    button { padding: 12px 16px; border-radius: 10px; border: 0; cursor: pointer; background: var(--primary); color: #ffffff; font-weight: 600; flex: 1; }
+    button.secondary { background: transparent; color: var(--primary); border: 1px solid rgba(31,111,235,0.3); }
 
-    button {
-      padding: 12px 16px;
-      border-radius: 10px;
-      border: 0;
-      cursor: pointer;
-      background: var(--primary);
-      color: #ffffff;
-      font-weight: 600;
-      flex: 1;
-    }
-
-    button.secondary {
-      background: transparent;
-      color: var(--primary);
-      border: 1px solid rgba(31,111,235,0.3);
-    }
-
-    #log {
-      margin-top: 16px;
-      font-size: 13px;
-      color: #374151;
-      min-height: 32px;
-    }
-
-    footer {
-      text-align: center;
-      padding: 16px;
-      font-size: 12px;
-      color: var(--muted);
-    }
+    #log { margin-top: 16px; font-size: 13px; color: #374151; min-height: 32px; }
+    footer { text-align: center; padding: 16px; font-size: 12px; color: var(--muted); }
 
     @media (max-width: 900px) {
-      .page {
-        flex-direction: column;
-        gap: 40px;
-        text-align: center;
-      }
+      .page { flex-direction: column; gap: 40px; text-align: center; }
     }
   </style>
 </head>
@@ -221,7 +115,7 @@
 
     <div class="page">
 
-      <!-- LEFT HEADER -->
+      <!-- LEFT BRANDING -->
       <div class="branding">
         <h1>Smart Cottage System</h1>
         <p>Innovation at the Heart of Home</p>
@@ -230,7 +124,6 @@
       <!-- RIGHT FORM -->
       <div class="form-wrap">
         <form id="regForm" autocomplete="off">
-
           <label>Cottage Assignment
             <select id="cottage">
               <option value="COTTAGE-1">Cottage 1</option>
@@ -245,22 +138,22 @@
           </label>
 
           <label>Name
-            <input id="name" type="text" required>
+            <input id="name" type="text" required placeholder="Full name">
           </label>
 
           <div class="row">
             <div class="col">
-              <label>Unique ID
-                <input id="employee_id" type="text">
+              <label>Employee ID
+                <input id="employee_id" type="text" placeholder="Optional">
               </label>
             </div>
             <div class="col">
               <label>Access Level
                 <select id="access_level">
-                  <option value="user">Guest</option>
-                  <option value="staff">Basic</option>
-                  <option value="admin">Premium</option>
-                  <option value="guest">Admin</option>
+                  <option value="user">User</option>
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                  <option value="guest">Guest</option>
                 </select>
               </label>
             </div>
@@ -284,8 +177,74 @@
     <footer>
       © Smart Cottage 2026
     </footer>
-
   </div>
 
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script>
+    const SERVER = "";
+    const socket = io(SERVER || window.location.origin);
+
+    const uidInput = document.getElementById("uid");
+    const noticeText = document.getElementById("noticeText");
+    const log = document.getElementById("log");
+    const form = document.getElementById("regForm");
+
+    function appendLog(msg) {
+      const ts = new Date().toLocaleTimeString();
+      log.textContent = `[${ts}] ${msg}`;
+    }
+
+    socket.on("connect", () => appendLog("Connected."));
+    socket.on("disconnect", () => appendLog("Disconnected."));
+
+    socket.on("card_tapped", (data) => {
+      if (!data || !data.uid) return;
+      uidInput.value = data.uid;
+      noticeText.textContent = "Card detected: " + data.uid;
+      appendLog("Card tapped: " + data.uid);
+      document.getElementById("name").focus();
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        uid: uidInput.value.trim(),
+        name: document.getElementById("name").value.trim(),
+        employee_id: document.getElementById("employee_id").value.trim(),
+        access_level: document.getElementById("access_level").value,
+        valid_until: document.getElementById("valid_until").value,
+        cottage: document.getElementById("cottage").value
+      };
+
+      if (!payload.uid) return appendLog("Tap a card first.");
+      if (!payload.name) return appendLog("Name required.");
+
+      appendLog("Saving…");
+
+      const res = await fetch("/api/register_card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        appendLog("Card saved successfully ✔");
+        form.reset();
+        uidInput.value = "";
+        noticeText.textContent = "Tap next card…";
+      } else {
+        appendLog("Error: " + (json.error || "Unknown"));
+      }
+    });
+
+    document.getElementById("clearBtn").onclick = () => {
+      form.reset();
+      uidInput.value = "";
+      appendLog("Form cleared");
+    };
+  </script>
 </body>
 </html>
