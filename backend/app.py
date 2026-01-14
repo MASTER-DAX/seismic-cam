@@ -67,34 +67,35 @@ def check_access():
     uid = data.get("uid")
     reader_cottage = data.get("reader_cottage")
 
-    if not uid:
-        return jsonify({"error": "missing uid"}), 400
-    if not reader_cottage:
-        return jsonify({"error": "missing reader_cottage"}), 400
+    if not uid or not reader_cottage:
+        return jsonify({"error": "missing data"}), 400
 
     user = find_user_by_uid(uid)
 
     if not user:
-        return jsonify({
+        socketio.emit("card_tapped", {
+            "uid": uid,
             "access": "denied",
             "reason": "Card not registered"
         })
+        return jsonify({"access": "denied"})
 
     if user.get("cottage") != reader_cottage:
-        return jsonify({
+        socketio.emit("card_tapped", {
+            "uid": uid,
             "access": "denied",
-            "reason": "Card assigned to different cottage"
+            "reason": "Wrong cottage"
         })
+        return jsonify({"access": "denied"})
 
-    return jsonify({
+    socketio.emit("card_tapped", {
+        "uid": uid,
         "access": "granted",
-        "reason": "Valid card & correct cottage",
-        "user": {
-            "name": user.get("name"),
-            "employee_id": user.get("employee_id"),
-            "access_level": user.get("access_level")
-        }
+        "reason": "Access granted"
     })
+
+    return jsonify({"access": "granted"})
+
 
 # -------------------------------------------------
 # Admin → Login User (for Mobile App)
