@@ -16,7 +16,8 @@ except Exception as e:
     print("MongoDB connection failed:", e)
     raise
 
-db = client["smart_cottage"]   # ✅ MATCH URI
+db = client["rfid_system"]
+   # ✅ MATCH URI
 
 users = db["users"]
 taps = db["taps"]
