@@ -1,12 +1,14 @@
+# admin_app.py
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from db import (
-    find_user_by_uid,
+    find_user_by_name_and_employee,
     register_user,
-    trigger_buzzer_event,
-    count_users_by_access_level
+    find_user_by_uid,
+    count_users_by_access_level,
+    trigger_buzzer_event
 )
 
 # -------------------------------------------------
@@ -95,9 +97,8 @@ def check_access():
     })
 
 # -------------------------------------------------
-# Admin → Register Card
+# Admin → Login User (for Mobile App)
 # -------------------------------------------------
-
 @app.route("/api/login_user", methods=["POST"])
 def login_user():
     data = request.get_json() or {}
@@ -107,11 +108,8 @@ def login_user():
     if not name or not employee_id:
         return jsonify({"success": False, "message": "name and employee_id required"}), 400
 
-    # Case-insensitive search for name + exact employee_id
-    user = users.find_one(
-        {"name": {"$regex": f"^{name}$", "$options": "i"}, "employee_id": employee_id},
-        {"_id": 0}
-    )
+    # Use helper function
+    user = find_user_by_name_and_employee(name, employee_id)
 
     if not user:
         return jsonify({"success": False, "message": "User not found"}), 401
@@ -125,6 +123,10 @@ def login_user():
             "cottage": user.get("cottage")
         }
     })
+
+# -------------------------------------------------
+# Admin → Register Card
+# -------------------------------------------------
 @app.route("/api/register_card", methods=["POST"])
 def register_card():
     data = request.get_json() or {}
@@ -161,10 +163,10 @@ def user_counts():
     return jsonify(counts)
 
 # -------------------------------------------------
-# USER LOGIN (UID + NAME)
+# USER LOGIN (UID + NAME) → RFID login
 # -------------------------------------------------
-@app.route("/api/login", methods=["POST"])
-def login():
+@app.route("/api/rfid/login", methods=["POST"])
+def login_rfid():
     data = request.get_json() or {}
 
     uid = data.get("uid")
@@ -204,47 +206,3 @@ def login():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     socketio.run(app, host="0.0.0.0", port=port)
-
-
-
-
-
-db.py
-from pymongo import MongoClient
-import os
-from datetime import datetime
-
-client = MongoClient(os.getenv("MONGO_URI"))
-db = client["rfid_system"]
-
-users = db["users"]
-taps = db["taps"]
-
-# ------------------------
-# USER OPERATIONS
-# ------------------------
-def register_user(doc):
-    doc["created_at"] = datetime.utcnow()
-    users.replace_one({"uid": doc["uid"]}, doc, upsert=True)
-    return True
-
-def find_user_by_uid(uid):
-    return users.find_one({"uid": uid}, {"_id": 0})
-
-def trigger_buzzer_event(uid):
-    taps.insert_one({"uid": uid, "ts": datetime.utcnow()})
-
-# ------------------------
-# DASHBOARD STATS
-# ------------------------
-def count_users_by_access_level():
-    pipeline = [
-        {"$group": {"_id": "$access_level", "count": {"$sum": 1}}}
-    ]
-    result = users.aggregate(pipeline)
-    counts = {"guest": 0, "basic": 0, "premium": 0, "admin": 0}
-    for doc in result:
-        key = doc["_id"].lower()
-        if key in counts:
-            counts[key] = doc["count"]
-    return counts
