@@ -247,11 +247,19 @@
     });
 
     // ✅ SAME FUNCTIONALITY AS OLD FRONTEND
-    socket.on("card_tapped", (data) => {
-      if (!data || !data.uid) return;
-      uidInput.value = data.uid;
+  socket.on("card_tapped", (data) => {
+    if (!data || !data.uid) return;
+  
+    uidInput.value = data.uid;
+  
+    if (data.access === "granted") {
+      log.textContent = "Card " + data.uid + " — ACCESS GRANTED";
+    } else if (data.access === "denied") {
+      log.textContent = "Card " + data.uid + " — ACCESS DENIED";
+    } else {
       log.textContent = "Card tapped: " + data.uid;
-    });
+    }
+  });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
