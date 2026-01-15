@@ -158,10 +158,34 @@ def register_card():
 # -------------------------------------------------
 # DASHBOARD: Get counts by access level
 # -------------------------------------------------
+# -------------------------------------------------
+# DASHBOARD: Get counts by access level (mapped for graph)
+# -------------------------------------------------
 @app.route("/api/user_counts")
 def user_counts():
-    counts = count_users_by_access_level()
+    # Fetch raw counts from DB
+    raw_counts = count_users_by_access_level()  # e.g., {"Staff": 5, "Basic": 10, "Premium": 3, "Admin": 2}
+
+    # Map DB levels to frontend keys
+    level_map = {
+        "Staff": "guest",
+        "Basic": "basic",
+        "Premium": "premium",
+        "Admin": "admin"
+    }
+
+    # Initialize counts with 0
+    counts = {"guest": 0, "basic": 0, "premium": 0, "admin": 0}
+
+    # Only map the ones we care about
+    for db_level, count in raw_counts.items():
+        key = level_map.get(db_level)
+        if key:
+            counts[key] = count
+
+    print("Mapped user counts for dashboard:", counts)
     return jsonify(counts)
+
 
 # -------------------------------------------------
 # USER LOGIN (UID + NAME) → RFID login
