@@ -171,16 +171,35 @@
       }
     }
 
-    // USER DISTRIBUTION CHART
+    // USER DISTRIBUTION CHART WITH PERCENTAGES
     function renderUserChart(guest, basic, premium, admin) {
       if (userChart) userChart.detach();
+
+      const series = [guest, basic, premium, admin];
+      const total = series.reduce((a, b) => a + b, 0);
+      const percentages = series.map(val => total ? ((val / total) * 100).toFixed(1) : 0);
+
       userChart = new Chartist.Bar('#userChart', {
         labels: ['Guest', 'Basic', 'Premium', 'Admin'],
-        series: [[guest, basic, premium, admin]]
-      }, { low: 0 });
+        series: [series]
+      }, {
+        low: 0,
+        axisY: { onlyInteger: true }
+      });
+
+      userChart.on('draw', function(data) {
+        if (data.type === 'bar') {
+          const index = data.index;
+          data.group.elem('text', {
+            x: data.x2,
+            y: data.y2 - 10,
+            style: 'text-anchor: middle; font-size: 12px; fill: #333;'
+          }, 'ct-label').text(percentages[index] + '%');
+        }
+      });
     }
 
-    // SYSTEM LOGS (STATIC SAMPLE – pwede mo i-connect sa DB later)
+    // SYSTEM LOGS (STATIC SAMPLE)
     new Chartist.Bar('#logChart', {
       labels: ['Logs', 'Alerts', 'Warnings', 'Errors'],
       series: [[120, 45, 20, 5]]
