@@ -57,27 +57,11 @@ def trigger_buzzer_event(uid):
 # DASHBOARD STATS
 # ------------------------
 def count_users_by_access_level():
-    pipeline = [
-        {
-            "$group": {
-                "_id": {"$toLower": "$access_level"},
-                "count": {"$sum": 1}
-            }
-        }
-    ]
-
-    result = users.aggregate(pipeline)
-
-    counts = {
-        "guest": 0,
-        "basic": 0,
-        "premium": 0,
-        "admin": 0
-    }
-
-    for doc in result:
-        if doc["_id"] in counts:
-            counts[doc["_id"]] = doc["count"]
-
+    counts = {"guest": 0, "basic": 0, "premium": 0, "admin": 0}
+    for user in users.find({}, {"access_level": 1}):
+        level = user.get("access_level", "").lower()
+        if level in counts:
+            counts[level] += 1
     return counts
+
 
