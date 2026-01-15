@@ -146,7 +146,8 @@ def register_card():
         "uid": uid,
         "name": name,
         "employee_id": employee_id,
-        "access_level": access_level,
+        # ✅ SAFETY: force lowercase + default guest
+        "access_level": access_level.lower() if access_level else "guest",
         "valid_until": valid_until,
         "cottage": cottage
     }
@@ -154,6 +155,7 @@ def register_card():
     register_user(doc)
 
     return jsonify({"status": "saved"})
+
 
 # -------------------------------------------------
 # DASHBOARD: Get counts by access level
