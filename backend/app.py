@@ -97,6 +97,7 @@ def check_access():
     return jsonify({"access": "granted"})
 
 
+
 # -------------------------------------------------
 # Admin → Login User (for Mobile App)
 # -------------------------------------------------
@@ -144,20 +145,20 @@ def register_card():
     if not uid or not name:
         return jsonify({"error": "uid and name required"}), 400
 
-    # Create document exactly like old backend
     doc = {
         "uid": uid,
         "name": name,
         "employee_id": employee_id,
+        # ✅ SAFETY: force lowercase + default guest
         "access_level": access_level.lower() if access_level else "guest",
         "valid_until": valid_until,
         "cottage": cottage
     }
 
-    # Save / overwrite user
     register_user(doc)
 
-    return jsonify({"status": "saved", "message": "Card registered successfully"})
+    return jsonify({"status": "saved"})
+
 
 
 # -------------------------------------------------
@@ -191,6 +192,7 @@ def login_rfid():
             "message": "User not found"
         }), 401
 
+    # Case-insensitive name check
     if user.get("name", "").lower() != name.lower():
         return jsonify({
             "success": False,
@@ -206,7 +208,6 @@ def login_rfid():
             "cottage": user.get("cottage")
         }
     })
-
 
 # -------------------------------------------------
 # RUN SERVER
