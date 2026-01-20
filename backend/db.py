@@ -26,6 +26,13 @@ taps = db["taps"]
 # USER OPERATIONS
 # ------------------------
 
+def get_users_by_cottage(cottage):
+    return list(users.find(
+        {"cottage": cottage},
+        {"_id": 0}
+    ))
+
+
 def find_user_by_name_and_employee(name, employee_id):
     try:
         return users.find_one(
