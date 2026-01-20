@@ -28,12 +28,12 @@ body{
 
 /* SIDEBAR */
 #sidebar{
-  width:70px;
+  width: 64px; 
   padding:16px;
   background:rgba(255,255,255,.05);
   transition:.3s;
 }
-#sidebar:hover{width:190px}
+#sidebar:hover{width: 170px;}
 #sidebar span{opacity:0;transition:.2s}
 #sidebar:hover span{opacity:1}
 #sidebar ul{list-style:none;padding:0;margin-top:30px}
@@ -155,11 +155,15 @@ input,select{
 <body>
 
 <div id="sidebar">
-<ul>
-<li><a href="#"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-<li><a href="#"><i class="fas fa-users"></i><span>Accounts</span></a></li>
-</ul>
+  <ul>
+    <li><a href="/index.html"><i class="fas fa-home"></i><span>Home</span></a></li>
+    <li><a href="/accounts.html"><i class="fas fa-users"></i><span>Accounts</span></a></li>
+    <!-- Optional: add Reports & Architecture -->
+    <li><a href="#"><i class="fas fa-chart-line"></i><span>Reports</span></a></li>
+    <li><a href="#"><i class="fas fa-project-diagram"></i><span>Architecture</span></a></li>
+  </ul>
 </div>
+
 
 <div class="main">
 <div class="header">Admin Dashboard — RFID Console</div>
@@ -246,15 +250,32 @@ input,select{
 const socket = io();
 let currentCottage="COTTAGE-1";
 
+// ----------------------
+// SOCKET.IO LIVE LOG
+// ----------------------
 socket.on("connect",()=>log.textContent="Connected. Tap card.");
 socket.on("disconnect",()=>log.textContent="Disconnected.");
 
-socket.on("card_tapped",d=>{
+// Updated: show access granted/denied with color and reason
+socket.on("card_tapped", d => {
   if(!d?.uid) return;
-  uid.value=d.uid;
-  log.textContent=`Card tapped: ${d.uid}`;
+  uid.value = d.uid;
+
+  if(d.access === "granted"){
+    log.textContent = `Access Granted — ${d.reason || ""}`;
+    log.style.color = "#22c55e"; // green
+  } else if(d.access === "denied"){
+    log.textContent = `Access Denied — ${d.reason || ""}`;
+    log.style.color = "#ef4444"; // red
+  } else {
+    log.textContent = `Card tapped: ${d.uid}`;
+    log.style.color = "#7dd3fc"; // default blue
+  }
 });
 
+// ----------------------
+// UTILITY FUNCTIONS
+// ----------------------
 function badge(level){
   return `<span class="badge ${level}">${level.toUpperCase()}</span>`;
 }
@@ -286,6 +307,12 @@ function loadCottage(cottage,btn){
 }
 
 function save(){
+  if(!uid.value){
+    log.textContent="Tap card first!";
+    log.style.color="#ef4444";
+    return;
+  }
+
   fetch("/api/register_card",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
@@ -309,8 +336,10 @@ function deleteUser(uid){
 function clearForm(){
   document.querySelectorAll("input").forEach(i=>i.value="");
   log.textContent="Cleared";
+  log.style.color="#7dd3fc";
 }
 
+// Initialize first cottage
 loadCottage("COTTAGE-1");
 </script>
 
