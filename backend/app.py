@@ -108,18 +108,30 @@ def check_access():
 # Admin → Register Card
 # -------------------------------------------------
 @app.route("/api/register_card", methods=["POST"])
-def register_card_route():
+def register_card():
     data = request.get_json() or {}
+    
     uid = data.get("uid")
     name = data.get("name")
     employee_id = data.get("employee_id")
     access_level = data.get("access_level")
     valid_until = data.get("valid_until")
     cottage = data.get("cottage")
-
+    
     if not uid or not name:
         return jsonify({"error": "uid and name required"}), 400
 
+    # Check if card already exists
+    user = find_user_by_uid(uid)
+    if user:
+        # If access is already granted, cannot register again
+        if user.get("access_level", "").lower() != "guest":
+            return jsonify({
+                "status": "failed",
+                "message": "Card already active, cannot register again"
+            }), 400
+    
+    # If not found or access denied, allow registration
     doc = {
         "uid": uid,
         "name": name,
@@ -129,7 +141,9 @@ def register_card_route():
         "cottage": cottage
     }
     register_user(doc)
+    
     return jsonify({"status": "saved"})
+
 
 # -------------------------------------------------
 # Admin → Delete User
