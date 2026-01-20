@@ -1,348 +1,310 @@
+
+
+
+
+
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Smart Cottage — Admin Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Smart Cottage System — Register Card</title>
 
-<link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
 
-<style>
-:root{
-  --bg:#020617;
-  --card:rgba(255,255,255,.08);
-  --border:rgba(255,255,255,.15);
-  --primary:#38bdf8;
-  --text:#e5e7eb;
-}
+  <style>
+    :root {
+      --bg: #e8f2ff;
+      --primary: #1f6feb;
+      --muted: #6b7280;
+      --card-bg: rgba(255, 255, 255, 0.75);
+    }
 
-*{box-sizing:border-box}
+    * { box-sizing: border-box; }
 
-body{
-  margin:0;
-  font-family:Nunito,system-ui;
-  background:linear-gradient(120deg,#020617,#0f172a);
-  color:var(--text);
-  height:100vh;
-  display:flex;
-}
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Nunito', system-ui, -apple-system;
+      background: var(--bg);
+      color: #111827;
+    }
 
-/* SIDEBAR */
-#sidebar{
-  width:70px;
-  padding:16px;
-  background:rgba(255,255,255,.05);
-  transition:.3s;
-}
-#sidebar:hover{width:190px}
-#sidebar span{opacity:0;transition:.2s}
-#sidebar:hover span{opacity:1}
-#sidebar ul{list-style:none;padding:0;margin-top:30px}
-#sidebar li{margin-bottom:18px}
-#sidebar a{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  color:var(--text);
-  text-decoration:none;
-}
-#sidebar a:hover{color:var(--primary)}
+    body { display: flex; }
 
-/* MAIN */
-.main{
-  flex:1;
-  padding:24px;
-  display:flex;
-  flex-direction:column;
-}
+    /* SIDEBAR */
+    #sidebar {
+      width: 64px;
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      padding: 16px;
+      transition: all 0.3s;
+    }
+    #sidebar span { opacity: 0; transition: opacity 0.2s; white-space: nowrap; }
+    #sidebar:hover { width: 170px; }
+    #sidebar:hover span { opacity: 1; }
+    #sidebar ul { margin-top: 32px; list-style: none; padding: 0; color: #4b5563; }
+    #sidebar li { margin-bottom: 16px; }
+    #sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+    }
+    #sidebar a:hover { color: var(--primary); }
 
-.header{
-  font-size:26px;
-  font-weight:800;
-  margin-bottom:16px;
-}
+    /* MAIN */
+    .main { flex: 1; display: flex; flex-direction: column; }
 
-.dashboard{
-  flex:1;
-  display:grid;
-  grid-template-columns:2.2fr 1.3fr;
-  gap:24px;
-}
+    .page {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      gap: 80px;
+    }
 
-/* DATABASE PANEL */
-.db-panel{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:18px;
-  padding:20px;
-  backdrop-filter:blur(14px);
-}
+    .branding { max-width: 420px; }
+    .branding h1 {
+      font-size: 48px;
+      margin: 0;
+      color: var(--primary);
+      font-weight: 800;
+    }
+    .branding p {
+      margin-top: 12px;
+      font-size: 22px;
+      color: #1f2937;
+    }
 
-.db-panel h2{margin:0 0 14px}
+    /* FORM WRAP with BACKDROP FILTER */
+    .form-wrap {
+      width: 420px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+      backdrop-filter: blur(10px); /* <-- new */
+      -webkit-backdrop-filter: blur(10px); /* Safari */
+    }
 
-.cottage-tabs{
-  display:flex;
-  gap:10px;
-  margin-bottom:14px;
-}
-.cottage-tabs button{
-  flex:1;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:transparent;
-  color:var(--text);
-  cursor:pointer;
-}
-.cottage-tabs button.active,
-.cottage-tabs button:hover{
-  background:var(--primary);
-  color:#020617;
-}
+    label {
+      display: block;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #374151;
+    }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:14px;
-}
-th,td{
-  padding:10px;
-  border-bottom:1px solid var(--border);
-}
-th{
-  text-align:left;
-  color:#7dd3fc;
-  font-weight:700;
-}
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+    }
 
-.badge{
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
-}
-.guest{background:#334155}
-.basic{background:#0ea5e9;color:#020617}
-.premium{background:#22c55e;color:#020617}
-.admin{background:#facc15;color:#020617}
+    input[readonly] { background: #f3f4f6; }
 
-.actions button{
-  border:none;
-  padding:6px 10px;
-  border-radius:6px;
-  cursor:pointer;
-}
-.edit{background:#facc15}
-.delete{background:#ef4444;color:white}
+    .row { display: flex; gap: 10px; }
+    .col { flex: 1; }
 
-/* REGISTER */
-.form-wrap{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:18px;
-  padding:20px;
-  backdrop-filter:blur(14px);
-}
+    .actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+    }
 
-label{
-  display:block;
-  margin-top:12px;
-  font-size:13px;
-}
-input,select{
-  width:100%;
-  margin-top:6px;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:rgba(0,0,0,.35);
-  color:var(--text);
-}
-input[readonly]{opacity:.7}
+    button {
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 0;
+      cursor: pointer;
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 600;
+      flex: 1;
+    }
 
-.actions-row{
-  display:flex;
-  gap:10px;
-  margin-top:16px;
-}
-.actions-row button{
-  flex:1;
-  padding:12px;
-  border-radius:12px;
-  font-weight:700;
-  cursor:pointer;
-}
-.save{background:var(--primary);color:#020617}
-.clear{background:transparent;border:1px solid var(--border);color:var(--text)}
+    button.secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid rgba(31,111,235,0.3);
+    }
 
-#log{
-  margin-top:14px;
-  font-size:13px;
-  min-height:18px;
-  color:#7dd3fc;
-}
-</style>
+    #log {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #374151;
+      min-height: 24px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        flex-direction: column;
+        gap: 40px;
+        text-align: center;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
-<div id="sidebar">
-<ul>
-<li><a href="/index.html"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-<li><a href="/accounts.html"><i class="fas fa-users"></i><span>Accounts</span></a></li>
-</ul>
-</div>
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <ul>
+      <li><a href="/index.html"><i class="fas fa-home"></i><span>Home</span></a></li>
+      <li><a href="#"><i class="fas fa-chart-line"></i><span>Reports</span></a></li>
+      <li><a href="#"><i class="fas fa-project-diagram"></i><span>Architecture</span></a></li>
+      <li><a href="/accounts.html"><i class="fas fa-user"></i><span>Accounts</span></a></li>
+    </ul>
+  </div>
 
-<div class="main">
-<div class="header">Admin Dashboard</div>
+  <!-- MAIN -->
+  <div class="main">
+    <div class="page">
+      <div class="branding">
+        <h1>Smart Cottage System</h1>
+        <p>Innovation at the Heart of Home</p>
+      </div>
 
-<div class="dashboard">
+      <div class="form-wrap">
+        <form id="regForm" autocomplete="off">
 
-<!-- DATABASE -->
-<div class="db-panel">
-<h2>Database</h2>
+          <label>Cottage Assignment
+            <select id="cottage">
+              <option value="COTTAGE-1">Cottage 1</option>
+              <option value="COTTAGE-2">Cottage 2</option>
+              <option value="COTTAGE-3">Cottage 3</option>
+              <option value="COTTAGE-4">Cottage 4</option>
+            </select>
+          </label>
 
-<div class="cottage-tabs">
-<button class="active" onclick="loadCottage('COTTAGE-1',this)">Cottage 1</button>
-<button onclick="loadCottage('COTTAGE-2',this)">Cottage 2</button>
-<button onclick="loadCottage('COTTAGE-3',this)">Cottage 3</button>
-<button onclick="loadCottage('COTTAGE-4',this)">Cottage 4</button>
-</div>
+          <label>Card UID
+            <input id="uid" type="text" readonly placeholder="Tap a card...">
+          </label>
 
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Employee</th>
-<th>Access</th>
-<th>Valid Until</th>
-<th>Created</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody id="usersBody"></tbody>
-</table>
-</div>
+          <label>Name
+            <input id="name" type="text" required>
+          </label>
 
-<!-- REGISTER -->
-<div class="form-wrap">
-<h2>Register Card</h2>
+          <div class="row">
+            <div class="col">
+              <label>Employee ID
+                <input id="employee_id" type="text">
+              </label>
+            </div>
+            <div class="col">
+              <label>Access Level
+                        <select id="access_level" required>
+                      <option value="guest">Guest</option>
+                      <option value="basic">Basic</option>
+                      <option value="premium">Premium</option>
+                      <option value="admin">Admin</option>
+                      </select>
 
-<label>Card UID
-<input id="uid" readonly placeholder="Tap card...">
-</label>
+              </label>
+            </div>
+          </div>
 
-<label>Name
-<input id="name">
-</label>
+          <label>Valid Until
+            <input id="valid_until" type="date">
+          </label>
 
-<label>Employee ID
-<input id="employee_id">
-</label>
+          <div class="actions">
+            <button type="submit">Save</button>
+            <button type="button" class="secondary" id="clearBtn">Clear</button>
+          </div>
 
-<label>Access Level
-<select id="access_level">
-<option value="guest">Guest</option>
-<option value="basic">Basic</option>
-<option value="premium">Premium</option>
-<option value="admin">Admin</option>
-</select>
-</label>
+          <div id="log">Waiting for card...</div>
+        </form>
+      </div>
 
-<label>Valid Until
-<input type="date" id="valid_until">
-</label>
+    </div>
 
-<label>Cottage
-<select id="cottage">
-<option value="COTTAGE-1">Cottage 1</option>
-<option value="COTTAGE-2">Cottage 2</option>
-<option value="COTTAGE-3">Cottage 3</option>
-<option value="COTTAGE-4">Cottage 4</option>
-</select>
-</label>
+    <footer>© Smart Cottage 2026</footer>
+  </div>
 
-<div class="actions-row">
-<button class="save" onclick="save()">Save</button>
-<button class="clear" onclick="clearForm()">Clear</button>
-</div>
+  <!-- JS -->
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script>
+    const socket = io(window.location.origin);
 
-<div id="log">Waiting for card...</div>
-</div>
+    const uidInput = document.getElementById("uid");
+    const log = document.getElementById("log");
+    const form = document.getElementById("regForm");
 
-</div>
-</div>
-
-<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-<script>
-const socket = io();
-let currentCottage = "COTTAGE-1";
-
-socket.on("card_tapped", d=>{
-  if(d.uid) uid.value=d.uid;
-  log.textContent=d.access?`${d.uid} — ${d.access.toUpperCase()}`:"Card detected";
-});
-
-function badge(level){
-  return `<span class="badge ${level}">${level.toUpperCase()}</span>`;
-}
-
-function loadCottage(cottage,btn){
-  currentCottage=cottage;
-  document.querySelectorAll(".cottage-tabs button").forEach(b=>b.classList.remove("active"));
-  if(btn) btn.classList.add("active");
-
-  fetch(`/api/users_by_cottage/${cottage}`)
-  .then(r=>r.json())
-  .then(data=>{
-    usersBody.innerHTML="";
-    data.forEach(u=>{
-      usersBody.innerHTML+=`
-      <tr>
-        <td>${u.name}</td>
-        <td>${u.employee_id||""}</td>
-        <td>${badge(u.access_level||"guest")}</td>
-        <td>${u.valid_until||""}</td>
-        <td>${u.created_at?.substring(0,10)||""}</td>
-        <td class="actions">
-          <button class="edit">Edit</button>
-        <button class="delete" onclick="deleteUser('${u.uid}')">Delete</button>
-
-        </td>
-      </tr>`;
+    socket.on("connect", () => {
+      log.textContent = "Connected. Tap a card.";
     });
-  });
-}
 
-function save(){
-  fetch("/api/register_card",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      uid:uid.value,
-      name:name.value,
-      employee_id:employee_id.value,
-      access_level:access_level.value,
-      valid_until:valid_until.value,
-      cottage:cottage.value
-    })
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    log.textContent=res.error||"Saved successfully";
-    loadCottage(currentCottage);
-  });
-}
+    socket.on("disconnect", () => {
+      log.textContent = "Disconnected.";
+    });
 
-function clearForm(){
-  document.querySelectorAll("input").forEach(i=>i.value="");
-  log.textContent="Cleared";
-}
+    // ✅ Functionality: Realtime display of tapped card
+    socket.on("card_tapped", (data) => {
+      if (!data || !data.uid) return;
 
-loadCottage("COTTAGE-1");
-</script>
+      uidInput.value = data.uid;
 
+      if (data.access === "granted") {
+        log.textContent = "Card " + data.uid + " — ACCESS GRANTED";
+      } else if (data.access === "denied") {
+        log.textContent = "Card " + data.uid + " — ACCESS DENIED";
+      } else {
+        log.textContent = "Card tapped: " + data.uid;
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!uidInput.value) {
+        log.textContent = "Tap a card first.";
+        return;
+      }
+
+      const payload = {
+        uid: uidInput.value,
+        name: document.getElementById("name").value,
+        employee_id: document.getElementById("employee_id").value,
+        access_level: document.getElementById("access_level").value,
+        valid_until: document.getElementById("valid_until").value,
+        cottage: document.getElementById("cottage").value
+      };
+
+      const res = await fetch("/api/register_card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        log.textContent = "Card saved.";
+        form.reset();
+        uidInput.value = "";
+      } else {
+        log.textContent = "Save failed.";
+      }
+    });
+
+    document.getElementById("clearBtn").onclick = () => {
+      form.reset();
+      uidInput.value = "";
+      log.textContent = "Cleared.";
+    };
+  </script>
 </body>
 </html>
