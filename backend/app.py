@@ -127,9 +127,13 @@ def login_user():
 # -------------------------------------------------
 # Admin → Register Card (Updated: Denied/Expired Only)
 # -------------------------------------------------
+# -------------------------------------------------
+# Admin → Register Card (OLD backend behavior)
+# -------------------------------------------------
 @app.route("/api/register_card", methods=["POST"])
-def register_card_route():
+def register_card():
     data = request.get_json() or {}
+
     uid = data.get("uid")
     name = data.get("name")
     employee_id = data.get("employee_id")
@@ -140,30 +144,7 @@ def register_card_route():
     if not uid or not name:
         return jsonify({"error": "uid and name required"}), 400
 
-    existing_user = find_user_by_uid(uid)
-
-    if existing_user:
-        # Determine if the card is active
-        level = existing_user.get("access_level", "guest").lower()
-        valid_date_str = existing_user.get("valid_until")
-        is_active = level != "guest"  # guest = not active
-
-        if valid_date_str:
-            try:
-                valid_date = datetime.strptime(valid_date_str, "%Y-%m-%d").date()
-                if valid_date < datetime.today().date():
-                    is_active = False  # expired card = not active
-            except:
-                is_active = False  # invalid date = treat as not active
-
-        if is_active:
-            return jsonify({
-                "status": "failed",
-                "message": "Card already active – cannot register"
-            }), 400
-        # Else: denied/expired → can register
-
-    # Register / overwrite denied card
+    # Create document exactly like old backend
     doc = {
         "uid": uid,
         "name": name,
@@ -172,7 +153,10 @@ def register_card_route():
         "valid_until": valid_until,
         "cottage": cottage
     }
+
+    # Save / overwrite user
     register_user(doc)
+
     return jsonify({"status": "saved", "message": "Card registered successfully"})
 
 
