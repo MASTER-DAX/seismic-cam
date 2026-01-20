@@ -158,12 +158,10 @@ input,select{
   <ul>
     <li><a href="/index.html"><i class="fas fa-home"></i><span>Home</span></a></li>
     <li><a href="/accounts.html"><i class="fas fa-users"></i><span>Accounts</span></a></li>
-    <!-- Optional: add Reports & Architecture -->
     <li><a href="#"><i class="fas fa-chart-line"></i><span>Reports</span></a></li>
     <li><a href="#"><i class="fas fa-project-diagram"></i><span>Architecture</span></a></li>
   </ul>
 </div>
-
 
 <div class="main">
 <div class="header">Admin Dashboard — RFID Console</div>
@@ -201,7 +199,7 @@ input,select{
 <h2>Register Card</h2>
 
 <label>Card UID
-<input id="uid" readonly placeholder="Tap card...">
+<input id="uid" placeholder="Tap card or type UID...">
 </label>
 
 <label>Name
@@ -249,6 +247,7 @@ input,select{
 <script>
 const socket = io();
 let currentCottage="COTTAGE-1";
+const log = document.getElementById("log");
 
 // ----------------------
 // SOCKET.IO LIVE LOG
@@ -256,7 +255,6 @@ let currentCottage="COTTAGE-1";
 socket.on("connect",()=>log.textContent="Connected. Tap card.");
 socket.on("disconnect",()=>log.textContent="Disconnected.");
 
-// Updated: show access granted/denied with color and reason
 socket.on("card_tapped", d => {
   if(!d?.uid) return;
   uid.value = d.uid;
@@ -308,7 +306,7 @@ function loadCottage(cottage,btn){
 
 function save(){
   if(!uid.value){
-    log.textContent="Tap card first!";
+    log.textContent="Enter UID or tap card first!";
     log.style.color="#ef4444";
     return;
   }
@@ -325,7 +323,22 @@ function save(){
       cottage:cottage.value
     })
   })
-  .then(()=>loadCottage(currentCottage));
+  .then(r=>r.json())
+  .then(res=>{
+    if(res.status === "failed"){
+      log.textContent = res.message || "Cannot register card";
+      log.style.color = "#ef4444";
+    } else {
+      log.textContent = "Card registered successfully!";
+      log.style.color = "#22c55e";
+      loadCottage(currentCottage);
+    }
+  })
+  .catch(err=>{
+    log.textContent = "Error saving card";
+    log.style.color="#ef4444";
+    console.error(err);
+  });
 }
 
 function deleteUser(uid){
