@@ -1,3 +1,4 @@
+
 from pymongo import MongoClient
 import os
 from datetime import datetime
@@ -25,13 +26,6 @@ taps = db["taps"]
 # ------------------------
 # USER OPERATIONS
 # ------------------------
-
-def get_users_by_cottage(cottage):
-    return list(users.find(
-        {"cottage": cottage},
-        {"_id": 0}
-    ))
-
 
 def find_user_by_name_and_employee(name, employee_id):
     try:
@@ -70,3 +64,4 @@ def count_users_by_access_level():
         if level in counts:
             counts[level] += 1
     return counts
+
