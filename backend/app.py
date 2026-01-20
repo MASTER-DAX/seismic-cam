@@ -97,7 +97,6 @@ def check_access():
     return jsonify({"access": "granted"})
 
 
-
 # -------------------------------------------------
 # Admin → Login User (for Mobile App)
 # -------------------------------------------------
@@ -128,13 +127,9 @@ def login_user():
 # -------------------------------------------------
 # Admin → Register Card (Updated: Denied/Expired Only)
 # -------------------------------------------------
-# -------------------------------------------------
-# Admin → Register Card (OLD backend behavior)
-# -------------------------------------------------
 @app.route("/api/register_card", methods=["POST"])
-def register_card():
+def register_card_route():
     data = request.get_json() or {}
-
     uid = data.get("uid")
     name = data.get("name")
     employee_id = data.get("employee_id")
@@ -145,20 +140,40 @@ def register_card():
     if not uid or not name:
         return jsonify({"error": "uid and name required"}), 400
 
+    existing_user = find_user_by_uid(uid)
+
+    if existing_user:
+        # Determine if the card is active
+        level = existing_user.get("access_level", "guest").lower()
+        valid_date_str = existing_user.get("valid_until")
+        is_active = level != "guest"  # guest = not active
+
+        if valid_date_str:
+            try:
+                valid_date = datetime.strptime(valid_date_str, "%Y-%m-%d").date()
+                if valid_date < datetime.today().date():
+                    is_active = False  # expired card = not active
+            except:
+                is_active = False  # invalid date = treat as not active
+
+        if is_active:
+            return jsonify({
+                "status": "failed",
+                "message": "Card already active – cannot register"
+            }), 400
+        # Else: denied/expired → can register
+
+    # Register / overwrite denied card
     doc = {
         "uid": uid,
         "name": name,
         "employee_id": employee_id,
-        # ✅ SAFETY: force lowercase + default guest
         "access_level": access_level.lower() if access_level else "guest",
         "valid_until": valid_until,
         "cottage": cottage
     }
-
     register_user(doc)
-
-    return jsonify({"status": "saved"})
-
+    return jsonify({"status": "saved", "message": "Card registered successfully"})
 
 
 # -------------------------------------------------
@@ -192,7 +207,6 @@ def login_rfid():
             "message": "User not found"
         }), 401
 
-    # Case-insensitive name check
     if user.get("name", "").lower() != name.lower():
         return jsonify({
             "success": False,
@@ -208,6 +222,7 @@ def login_rfid():
             "cottage": user.get("cottage")
         }
     })
+
 
 # -------------------------------------------------
 # RUN SERVER
