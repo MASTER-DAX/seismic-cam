@@ -1,11 +1,9 @@
-app.py
 
 # admin_app.py
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
-from db import get_users_by_cottage
 from db import (
     find_user_by_name_and_employee,
     register_user,
@@ -38,11 +36,6 @@ def index():
 # -------------------------------------------------
 # ESP32 → Server: Tap Card
 # -------------------------------------------------
-
-@app.route("/api/users_by_cottage/<cottage>")
-def users_by_cottage(cottage):
-    return jsonify(get_users_by_cottage(cottage))
-    
 @app.route("/api/tap", methods=["POST"])
 def tap_card():
     data = request.get_json() or {}
@@ -57,14 +50,13 @@ def tap_card():
 
     trigger_buzzer_event(uid)
     socketio.emit("card_tapped", {"uid": uid})
-   user = find_user_by_uid(uid)
+    user = find_user_by_uid(uid)
 
-socketio.emit("card_tapped", {
-    "uid": uid,
-    "registered": bool(user),
-    "user": user
-})
-
+    return jsonify({
+        "status": "ok",
+        "registered": bool(user),
+        "user": user
+    })
 
 # -------------------------------------------------
 # ESP32 CHECK ACCESS
@@ -163,11 +155,7 @@ def register_card():
 
     register_user(doc)
 
-socketio.emit("user_updated", {
-    "action": "register",
-    "user": doc
-})
-
+    return jsonify({"status": "saved"})
 
 
 # -------------------------------------------------
@@ -227,3 +215,4 @@ def login_rfid():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     socketio.run(app, host="0.0.0.0", port=port)
+
