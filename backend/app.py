@@ -38,25 +38,18 @@ def index():
 @app.route("/api/tap", methods=["POST"])
 def tap_card():
     data = request.get_json() or {}
-
+    
     uid = data.get("uid")
     reader_cottage = data.get("reader_cottage")
-
+    
     if not uid:
         return jsonify({"error": "missing uid"}), 400
     if not reader_cottage:
         return jsonify({"error": "missing reader_cottage"}), 400
 
-    # log tap / buzzer hook
     trigger_buzzer_event(uid)
-
+    socketio.emit("card_tapped", {"uid": uid})
     user = find_user_by_uid(uid)
-
-    # ✅ FIX: send access so frontend reacts
-    socketio.emit("card_tapped", {
-        "uid": uid,
-        "access": "registered" if user else "unregistered"
-    })
 
     return jsonify({
         "status": "ok",
@@ -79,7 +72,6 @@ def check_access():
 
     user = find_user_by_uid(uid)
 
-    # ❌ NOT REGISTERED
     if not user:
         socketio.emit("card_tapped", {
             "uid": uid,
@@ -88,7 +80,6 @@ def check_access():
         })
         return jsonify({"access": "denied"})
 
-    # ❌ WRONG COTTAGE
     if user.get("cottage") != reader_cottage:
         socketio.emit("card_tapped", {
             "uid": uid,
@@ -97,7 +88,6 @@ def check_access():
         })
         return jsonify({"access": "denied"})
 
-    # ✅ ACCESS GRANTED
     socketio.emit("card_tapped", {
         "uid": uid,
         "access": "granted",
@@ -106,8 +96,9 @@ def check_access():
 
     return jsonify({"access": "granted"})
 
+
 # -------------------------------------------------
-# Admin → Login User (Mobile App)
+# Admin → Login User (for Mobile App)
 # -------------------------------------------------
 @app.route("/api/login_user", methods=["POST"])
 def login_user():
@@ -118,6 +109,7 @@ def login_user():
     if not name or not employee_id:
         return jsonify({"success": False, "message": "name and employee_id required"}), 400
 
+    # Use helper function
     user = find_user_by_name_and_employee(name, employee_id)
 
     if not user:
@@ -154,6 +146,7 @@ def register_card():
         "uid": uid,
         "name": name,
         "employee_id": employee_id,
+        # ✅ SAFETY: force lowercase + default guest
         "access_level": access_level.lower() if access_level else "guest",
         "valid_until": valid_until,
         "cottage": cottage
@@ -163,15 +156,22 @@ def register_card():
 
     return jsonify({"status": "saved"})
 
+
 # -------------------------------------------------
-# DASHBOARD STATS
+# DASHBOARD: Get counts by access level
+# -------------------------------------------------
+# -------------------------------------------------
+# DASHBOARD: Get counts by access level (mapped for graph)
 # -------------------------------------------------
 @app.route("/api/user_counts")
 def user_counts():
-    return jsonify(count_users_by_access_level())
+    counts = count_users_by_access_level()
+    print("User counts:", counts)
+    return jsonify(counts)
+
 
 # -------------------------------------------------
-# RFID LOGIN (UID + NAME)
+# USER LOGIN (UID + NAME) → RFID login
 # -------------------------------------------------
 @app.route("/api/rfid/login", methods=["POST"])
 def login_rfid():
@@ -186,10 +186,17 @@ def login_rfid():
     user = find_user_by_uid(uid)
 
     if not user:
-        return jsonify({"success": False, "message": "User not found"}), 401
+        return jsonify({
+            "success": False,
+            "message": "User not found"
+        }), 401
 
+    # Case-insensitive name check
     if user.get("name", "").lower() != name.lower():
-        return jsonify({"success": False, "message": "Invalid credentials"}), 401
+        return jsonify({
+            "success": False,
+            "message": "Invalid credentials"
+        }), 401
 
     return jsonify({
         "success": True,
@@ -207,3 +214,4 @@ def login_rfid():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     socketio.run(app, host="0.0.0.0", port=port)
+
