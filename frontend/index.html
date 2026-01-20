@@ -1,214 +1,347 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
+<meta charset="utf-8">
+<title>Smart Cottage — Admin + RFID</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
-  <link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+<link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
 
-  <style>
-    body { background-color: #e8f2ff; }
-    .nunito { font-family: 'Nunito', sans-serif; }
-    #sidebar { transition: all .3s; z-index:50; }
-    #sidebar span { opacity: 0; transition: opacity .2s; }
-    #sidebar:hover { width: 170px; }
-    #sidebar:hover span { opacity:1; }
-  </style>
+<style>
+:root{
+  --bg:#020617;
+  --card:rgba(255,255,255,.08);
+  --border:rgba(255,255,255,.15);
+  --primary:#38bdf8;
+  --text:#e5e7eb;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Nunito;
+  background:linear-gradient(120deg,#020617,#0f172a);
+  color:var(--text);
+  height:100vh;
+  display:flex;
+}
+
+/* SIDEBAR */
+#sidebar{
+  width: 64px; 
+  padding:16px;
+  background:rgba(255,255,255,.05);
+  transition:.3s;
+}
+#sidebar:hover{width: 170px;}
+#sidebar span{opacity:0;transition:.2s}
+#sidebar:hover span{opacity:1}
+#sidebar ul{list-style:none;padding:0;margin-top:30px}
+#sidebar li{margin-bottom:18px}
+#sidebar a{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:var(--text);
+  text-decoration:none;
+}
+#sidebar a:hover{color:var(--primary)}
+
+.main{
+  flex:1;
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+}
+
+.header{
+  font-size:26px;
+  font-weight:800;
+  margin-bottom:16px;
+}
+
+.dashboard{
+  flex:1;
+  display:grid;
+  grid-template-columns:2.2fr 1.3fr;
+  gap:24px;
+}
+
+.panel{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:20px;
+  backdrop-filter:blur(14px);
+}
+
+.cottage-tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:14px;
+}
+.cottage-tabs button{
+  flex:1;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+}
+.cottage-tabs button.active,
+.cottage-tabs button:hover{
+  background:var(--primary);
+  color:#020617;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+th,td{
+  padding:10px;
+  border-bottom:1px solid var(--border);
+}
+th{color:#7dd3fc}
+
+.badge{
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
+.guest{background:#334155}
+.basic{background:#0ea5e9;color:#020617}
+.premium{background:#22c55e;color:#020617}
+.admin{background:#facc15;color:#020617}
+
+label{display:block;margin-top:12px;font-size:13px}
+input,select{
+  width:100%;
+  margin-top:6px;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.35);
+  color:var(--text);
+}
+
+.actions-row{
+  display:flex;
+  gap:10px;
+  margin-top:16px;
+}
+.actions-row button{
+  flex:1;
+  padding:12px;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+.save{background:var(--primary);color:#020617}
+.clear{background:transparent;border:1px solid var(--border);color:var(--text)}
+
+#log{
+  margin-top:14px;
+  font-size:13px;
+  min-height:18px;
+  color:#7dd3fc;
+}
+</style>
 </head>
 
-<body class="flex h-screen nunito">
+<body>
 
-  <!-- SIDEBAR -->
-  <div id="sidebar" class="h-screen w-16 bg-white shadow fixed px-4">
-    <ul class="mt-8 space-y-4 text-gray-600">
-      <li>
-        <a href="#" class="flex items-center hover:text-blue-500">
-          <i class="fas fa-home w-6"></i><span>Home</span>
-        </a>
-      </li>
-      <li>
-        <a href="#" class="flex items-center hover:text-blue-500">
-          <i class="fas fa-chart-line w-6"></i><span>Reports</span>
-        </a>
-      </li>
-      <li>
-        <a href="#" class="flex items-center hover:text-blue-500">
-          <i class="fas fa-project-diagram w-6"></i><span>Architecture</span>
-        </a>
-      </li>
-      <li>
-        <a href="/accounts.html" class="flex items-center hover:text-blue-500">
-          <i class="fas fa-user w-6"></i><span>Accounts</span>
-        </a>
-      </li>
-    </ul>
-  </div>
+<div id="sidebar">
+  <ul>
+    <li><a href="/index.html"><i class="fas fa-home"></i><span>Home</span></a></li>
+    <li><a href="/accounts.html"><i class="fas fa-users"></i><span>Accounts</span></a></li>
+    <!-- Optional: add Reports & Architecture -->
+    <li><a href="#"><i class="fas fa-chart-line"></i><span>Reports</span></a></li>
+    <li><a href="#"><i class="fas fa-project-diagram"></i><span>Architecture</span></a></li>
+  </ul>
+</div>
 
-  <!-- MAIN -->
-  <div class="flex-1 ml-16 p-6">
 
-    <!-- HEADER -->
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-700">
-        Admin Dashboard – RFID System
-      </h1>
-      <div class="flex items-center space-x-3">
-        <img src="https://i.pravatar.cc/40" class="rounded-full">
-        <span class="font-semibold">Admin</span>
-      </div>
-    </div>
+<div class="main">
+<div class="header">Admin Dashboard — RFID Console</div>
 
-    <!-- STATS -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white p-4 rounded shadow text-center">
-        <h3 class="text-xl font-bold text-blue-600">Guest</h3>
-        <p class="text-2xl" id="guestCount">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <h3 class="text-xl font-bold text-green-600">Basic</h3>
-        <p class="text-2xl" id="basicCount">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <h3 class="text-xl font-bold text-purple-600">Premium</h3>
-        <p class="text-2xl" id="premiumCount">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <h3 class="text-xl font-bold text-red-600">Admin</h3>
-        <p class="text-2xl" id="adminCount">0</p>
-      </div>
-    </div>
+<div class="dashboard">
 
-    <!-- GRAPHS -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+<!-- DATABASE -->
+<div class="panel">
+<h2>Database</h2>
 
-      <!-- USER DISTRIBUTION -->
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="font-bold mb-3">User Distribution</h2>
-        <div id="userChart" class="ct-chart ct-major-twelfth"></div>
-      </div>
+<div class="cottage-tabs">
+<button class="active" onclick="loadCottage('COTTAGE-1',this)">Cottage 1</button>
+<button onclick="loadCottage('COTTAGE-2',this)">Cottage 2</button>
+<button onclick="loadCottage('COTTAGE-3',this)">Cottage 3</button>
+<button onclick="loadCottage('COTTAGE-4',this)">Cottage 4</button>
+</div>
 
-      <!-- SYSTEM LOGS -->
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="font-bold mb-3">System Logs</h2>
-        <div id="logChart" class="ct-chart ct-major-twelfth"></div>
-      </div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Employee</th>
+<th>Access</th>
+<th>Valid</th>
+<th>Created</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="usersBody"></tbody>
+</table>
+</div>
 
-    </div>
+<!-- RFID REGISTER -->
+<div class="panel">
+<h2>Register Card</h2>
 
-    <!-- ARCHITECTURE -->
-    <div class="mt-10 bg-white p-6 rounded shadow">
-      <h2 class="text-2xl font-bold mb-4">System Architecture</h2>
-      <div class="grid md:grid-cols-3 gap-6">
+<label>Card UID
+<input id="uid" readonly placeholder="Tap card...">
+</label>
 
-        <div>
-          <h3 class="font-bold text-lg mb-2">Controllers</h3>
-          <ul class="list-disc ml-5 text-gray-600">
-            <li>ESP32</li>
-            <li>Arduino Mega</li>
-            <li>Raspberry Pi</li>
-          </ul>
-        </div>
+<label>Name
+<input id="name">
+</label>
 
-        <div>
-          <h3 class="font-bold text-lg mb-2">Sensors</h3>
-          <ul class="list-disc ml-5 text-gray-600">
-            <li>RFID (MFRC522)</li>
-            <li>Gas Sensor</li>
-            <li>Temperature Sensor</li>
-            <li>Presence Sensor</li>
-          </ul>
-        </div>
+<label>Employee ID
+<input id="employee_id">
+</label>
 
-        <div>
-          <h3 class="font-bold text-lg mb-2">User Levels</h3>
-          <ul class="list-disc ml-5 text-gray-600">
-            <li>Guest</li>
-            <li>Basic</li>
-            <li>Premium</li>
-            <li>Admin</li>
-          </ul>
-        </div>
+<label>Access Level
+<select id="access_level">
+<option value="guest">Guest</option>
+<option value="basic">Basic</option>
+<option value="premium">Premium</option>
+<option value="admin">Admin</option>
+</select>
+</label>
 
-      </div>
-    </div>
+<label>Valid Until
+<input type="date" id="valid_until">
+</label>
 
-  </div>
+<label>Cottage
+<select id="cottage">
+<option value="COTTAGE-1">Cottage 1</option>
+<option value="COTTAGE-2">Cottage 2</option>
+<option value="COTTAGE-3">Cottage 3</option>
+<option value="COTTAGE-4">Cottage 4</option>
+</select>
+</label>
 
-  <!-- SCRIPTS -->
-  <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+<div class="actions-row">
+<button class="save" onclick="save()">Save</button>
+<button class="clear" onclick="clearForm()">Clear</button>
+</div>
 
-  <script>
-    const guestEl = document.getElementById("guestCount");
-    const basicEl = document.getElementById("basicCount");
-    const premiumEl = document.getElementById("premiumCount");
-    const adminEl = document.getElementById("adminCount");
+<div id="log">Waiting for card...</div>
+</div>
 
-    let userChart;
+</div>
+</div>
 
-    // FETCH COUNTS FROM BACKEND
-    async function loadUserCounts() {
-      try {
-        const res = await fetch("/api/user_counts");
-        const data = await res.json();
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script>
+const socket = io();
+let currentCottage="COTTAGE-1";
 
-        const guest = data.guest || 0;
-        const basic = data.basic || 0;
-        const premium = data.premium || 0;
-        const admin = data.admin || 0;
+// ----------------------
+// SOCKET.IO LIVE LOG
+// ----------------------
+socket.on("connect",()=>log.textContent="Connected. Tap card.");
+socket.on("disconnect",()=>log.textContent="Disconnected.");
 
-        guestEl.textContent = guest;
-        basicEl.textContent = basic;
-        premiumEl.textContent = premium;
-        adminEl.textContent = admin;
+// Updated: show access granted/denied with color and reason
+socket.on("card_tapped", d => {
+  if(!d?.uid) return;
+  uid.value = d.uid;
 
-        renderUserChart(guest, basic, premium, admin);
-      } catch (err) {
-        console.error("Failed to load user counts", err);
-      }
-    }
+  if(d.access === "granted"){
+    log.textContent = `Access Granted — ${d.reason || ""}`;
+    log.style.color = "#22c55e"; // green
+  } else if(d.access === "denied"){
+    log.textContent = `Access Denied — ${d.reason || ""}`;
+    log.style.color = "#ef4444"; // red
+  } else {
+    log.textContent = `Card tapped: ${d.uid}`;
+    log.style.color = "#7dd3fc"; // default blue
+  }
+});
 
-    // USER DISTRIBUTION CHART WITH PERCENTAGES
-    function renderUserChart(guest, basic, premium, admin) {
-      if (userChart) userChart.detach();
+// ----------------------
+// UTILITY FUNCTIONS
+// ----------------------
+function badge(level){
+  return `<span class="badge ${level}">${level.toUpperCase()}</span>`;
+}
 
-      const series = [guest, basic, premium, admin];
-      const total = series.reduce((a, b) => a + b, 0);
-      const percentages = series.map(val => total ? ((val / total) * 100).toFixed(1) : 0);
+function loadCottage(cottage,btn){
+  currentCottage=cottage;
+  cottage && (document.getElementById("cottage").value=cottage);
+  document.querySelectorAll(".cottage-tabs button").forEach(b=>b.classList.remove("active"));
+  btn && btn.classList.add("active");
 
-      userChart = new Chartist.Bar('#userChart', {
-        labels: ['Guest', 'Basic', 'Premium', 'Admin'],
-        series: [series]
-      }, {
-        low: 0,
-        axisY: { onlyInteger: true }
-      });
+  fetch(`/api/users_by_cottage/${cottage}`)
+  .then(r=>r.json())
+  .then(data=>{
+    usersBody.innerHTML="";
+    data.forEach(u=>{
+      usersBody.innerHTML+=`
+      <tr>
+        <td>${u.name}</td>
+        <td>${u.employee_id||""}</td>
+        <td>${badge(u.access_level||"guest")}</td>
+        <td>${u.valid_until||""}</td>
+        <td>${u.created_at?.substring(0,10)||""}</td>
+        <td>
+          <button onclick="deleteUser('${u.uid}')">❌</button>
+        </td>
+      </tr>`;
+    });
+  });
+}
 
-      userChart.on('draw', function(data) {
-        if (data.type === 'bar') {
-          const index = data.index;
-          data.group.elem('text', {
-            x: data.x2,
-            y: data.y2 - 10,
-            style: 'text-anchor: middle; font-size: 12px; fill: #333;'
-          }, 'ct-label').text(percentages[index] + '%');
-        }
-      });
-    }
+function save(){
+  if(!uid.value){
+    log.textContent="Tap card first!";
+    log.style.color="#ef4444";
+    return;
+  }
 
-    // SYSTEM LOGS (STATIC SAMPLE)
-    new Chartist.Bar('#logChart', {
-      labels: ['Logs', 'Alerts', 'Warnings', 'Errors'],
-      series: [[120, 45, 20, 5]]
-    }, { low: 0 });
+  fetch("/api/register_card",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      uid:uid.value,
+      name:name.value,
+      employee_id:employee_id.value,
+      access_level:access_level.value,
+      valid_until:valid_until.value,
+      cottage:cottage.value
+    })
+  })
+  .then(()=>loadCottage(currentCottage));
+}
 
-    // INIT
-    loadUserCounts();
-    setInterval(loadUserCounts, 5000);
-  </script>
+function deleteUser(uid){
+  fetch(`/api/delete_user/${uid}`,{method:"DELETE"})
+  .then(()=>loadCottage(currentCottage));
+}
+
+function clearForm(){
+  document.querySelectorAll("input").forEach(i=>i.value="");
+  log.textContent="Cleared";
+  log.style.color="#7dd3fc";
+}
+
+// Initialize first cottage
+loadCottage("COTTAGE-1");
+</script>
 
 </body>
 </html>
