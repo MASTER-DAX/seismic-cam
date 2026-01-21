@@ -1,65 +1,68 @@
 from pymongo import MongoClient
-import os
 from datetime import datetime
+import os
 
-MONGO_URI = os.getenv("MONGO_URI")
-
-if not MONGO_URI:
-    raise RuntimeError("MONGO_URI environment variable not set")
-
-client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-
-try:
-    client.admin.command("ping")
-    print("MongoDB connected")
-except Exception as e:
-    print("MongoDB connection failed:", e)
-    raise
-
+client = MongoClient(os.getenv("MONGO_URI"))
 db = client["rfid_system"]
-   # ✅ MATCH URI
 
 users = db["users"]
 taps = db["taps"]
 
-# ------------------------
-# USER OPERATIONS
-# ------------------------
+# ---------------- USERS ----------------
+def get_users(cottage=None, search=None, skip=0, limit=10):
+    q = {}
+    if cottage:
+        q["cottage"] = cottage
+    if search:
+        q["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"employee_id": {"$regex": search, "$options": "i"}},
+            {"uid": {"$regex": search, "$options": "i"}}
+        ]
 
-def find_user_by_name_and_employee(name, employee_id):
-    try:
-        return users.find_one(
-            {
-                "name": {"$regex": f"^{name}$", "$options": "i"},
-                "employee_id": employee_id
-            },
-            {"_id": 0}
-        )
-    except Exception as e:
-        print("DB ERROR:", e)
-        return None
+    data = list(
+        users.find(q, {"_id": 0})
+        .sort("created_at", -1)
+        .skip(skip)
+        .limit(limit)
+    )
+    total = users.count_documents(q)
+    return data, total
 
 
 def register_user(doc):
     doc["created_at"] = datetime.utcnow()
     users.replace_one({"uid": doc["uid"]}, doc, upsert=True)
-    return True
 
 
-def find_user_by_uid(uid):
+def update_user(uid, data):
+    users.update_one({"uid": uid}, {"$set": data})
+
+
+def delete_user(uid):
+    users.delete_one({"uid": uid})
+
+
+def find_user(uid):
     return users.find_one({"uid": uid}, {"_id": 0})
 
+# ---------------- TAPS / AUDIT ----------------
+def log_tap(uid, cottage, result, reason):
+    taps.insert_one({
+        "uid": uid,
+        "cottage": cottage,
+        "result": result,
+        "reason": reason,
+        "timestamp": datetime.utcnow()
+    })
 
-def trigger_buzzer_event(uid):
-    taps.insert_one({"uid": uid, "ts": datetime.utcnow()})
 
-# ------------------------
-# DASHBOARD STATS
-# ------------------------
-def count_users_by_access_level():
-    counts = {"guest": 0, "basic": 0, "premium": 0, "admin": 0}
-    for user in users.find({}, {"access_level": 1}):
-        level = user.get("access_level", "").lower()
-        if level in counts:
-            counts[level] += 1
-    return counts
+def get_taps(skip=0, limit=20):
+    data = list(
+        taps.find({}, {"_id": 0})
+        .sort("timestamp", -1)
+        .skip(skip)
+        .limit(limit)
+    )
+    total = taps.count_documents({})
+    return data, total
