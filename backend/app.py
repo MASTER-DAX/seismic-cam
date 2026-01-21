@@ -3,13 +3,11 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
-from datetime import datetime
 from db import (
     find_user_by_name_and_employee,
     register_user,
     find_user_by_uid,
     count_users_by_access_level,
-    delete_user,
     trigger_buzzer_event
 )
 
@@ -40,9 +38,10 @@ def index():
 @app.route("/api/tap", methods=["POST"])
 def tap_card():
     data = request.get_json() or {}
+    
     uid = data.get("uid")
     reader_cottage = data.get("reader_cottage")
-
+    
     if not uid:
         return jsonify({"error": "missing uid"}), 400
     if not reader_cottage:
@@ -64,6 +63,7 @@ def tap_card():
 @app.route("/api/check_access", methods=["POST"])
 def check_access():
     data = request.get_json() or {}
+
     uid = data.get("uid")
     reader_cottage = data.get("reader_cottage")
 
@@ -72,97 +72,30 @@ def check_access():
 
     user = find_user_by_uid(uid)
 
-    access_result = {"uid": uid, "access": "denied", "reason": ""}
-
     if not user:
-        access_result["reason"] = "Card not registered"
-    elif user.get("cottage") != reader_cottage:
-        access_result["reason"] = "Wrong cottage"
-    elif user.get("valid_until"):
-        try:
-            valid_date = datetime.strptime(user["valid_until"], "%Y-%m-%d").date()
-            if valid_date < datetime.today().date():
-                access_result["reason"] = "Card expired"
-            else:
-                access_result["access"] = "granted"
-                access_result["reason"] = "Access granted"
-        except:
-            access_result["reason"] = "Invalid valid_until date"
-    else:
-        access_result["access"] = "granted"
-        access_result["reason"] = "Access granted"
+        socketio.emit("card_tapped", {
+            "uid": uid,
+            "access": "denied",
+            "reason": "Card not registered"
+        })
+        return jsonify({"access": "denied"})
 
-    socketio.emit("card_tapped", access_result)
-    return jsonify({"access": access_result["access"]})
+    if user.get("cottage") != reader_cottage:
+        socketio.emit("card_tapped", {
+            "uid": uid,
+            "access": "denied",
+            "reason": "Wrong cottage"
+        })
+        return jsonify({"access": "denied"})
 
-# -------------------------------------------------
-# Admin → Register Card (NEW LOGIC)
-# -------------------------------------------------
-@app.route("/api/register_card", methods=["POST"])
-def register_card():
-    data = request.get_json() or {}
-
-    uid = data.get("uid")
-    name = data.get("name")
-    employee_id = data.get("employee_id")
-    access_level = data.get("access_level")
-    valid_until = data.get("valid_until")
-    cottage = data.get("cottage")
-
-    if not uid or not name:
-        return jsonify({"status": "failed", "message": "UID and Name required"}), 400
-
-    user = find_user_by_uid(uid)
-
-    # Prevent registration if already active
-    if user:
-        try:
-            valid_date = datetime.strptime(user.get("valid_until",""), "%Y-%m-%d").date()
-            if valid_date >= datetime.today().date():
-                return jsonify({
-                    "status": "failed",
-                    "message": "Card already activated — cannot register"
-                }), 400
-        except:
-            # If valid_until invalid or missing, allow overwrite
-            pass
-
-    doc = {
+    socketio.emit("card_tapped", {
         "uid": uid,
-        "name": name,
-        "employee_id": employee_id,
-        "access_level": access_level.lower() if access_level else "guest",
-        "valid_until": valid_until,
-        "cottage": cottage
-    }
+        "access": "granted",
+        "reason": "Access granted"
+    })
 
-    register_user(doc)
-    return jsonify({"status": "saved", "message": "Card registered successfully"})
+    return jsonify({"access": "granted"})
 
-# -------------------------------------------------
-# Admin → Delete User
-# -------------------------------------------------
-@app.route("/api/delete_user/<uid>", methods=["DELETE"])
-def delete_user_route(uid):
-    delete_user(uid)
-    return jsonify({"status": "deleted"})
-
-# -------------------------------------------------
-# Dashboard: Users by Cottage
-# -------------------------------------------------
-@app.route("/api/users_by_cottage/<cottage>")
-def users_by_cottage_route(cottage):
-    # Assuming you have a find_users_by_cottage function
-    from db import find_users_by_cottage
-    return jsonify(find_users_by_cottage(cottage))
-
-# -------------------------------------------------
-# Dashboard: User Counts by Access Level
-# -------------------------------------------------
-@app.route("/api/user_counts")
-def user_counts():
-    counts = count_users_by_access_level()
-    return jsonify(counts)
 
 # -------------------------------------------------
 # Admin → Login User (for Mobile App)
@@ -176,6 +109,7 @@ def login_user():
     if not name or not employee_id:
         return jsonify({"success": False, "message": "name and employee_id required"}), 400
 
+    # Use helper function
     user = find_user_by_name_and_employee(name, employee_id)
 
     if not user:
@@ -192,11 +126,57 @@ def login_user():
     })
 
 # -------------------------------------------------
-# RFID Login (UID + Name)
+# Admin → Register Card
+# -------------------------------------------------
+@app.route("/api/register_card", methods=["POST"])
+def register_card():
+    data = request.get_json() or {}
+
+    uid = data.get("uid")
+    name = data.get("name")
+    employee_id = data.get("employee_id")
+    access_level = data.get("access_level")
+    valid_until = data.get("valid_until")
+    cottage = data.get("cottage")
+
+    if not uid or not name:
+        return jsonify({"error": "uid and name required"}), 400
+
+    doc = {
+        "uid": uid,
+        "name": name,
+        "employee_id": employee_id,
+        # ✅ SAFETY: force lowercase + default guest
+        "access_level": access_level.lower() if access_level else "guest",
+        "valid_until": valid_until,
+        "cottage": cottage
+    }
+
+    register_user(doc)
+
+    return jsonify({"status": "saved"})
+
+
+# -------------------------------------------------
+# DASHBOARD: Get counts by access level
+# -------------------------------------------------
+# -------------------------------------------------
+# DASHBOARD: Get counts by access level (mapped for graph)
+# -------------------------------------------------
+@app.route("/api/user_counts")
+def user_counts():
+    counts = count_users_by_access_level()
+    print("User counts:", counts)
+    return jsonify(counts)
+
+
+# -------------------------------------------------
+# USER LOGIN (UID + NAME) → RFID login
 # -------------------------------------------------
 @app.route("/api/rfid/login", methods=["POST"])
 def login_rfid():
     data = request.get_json() or {}
+
     uid = data.get("uid")
     name = data.get("name")
 
@@ -204,11 +184,19 @@ def login_rfid():
         return jsonify({"error": "uid and name required"}), 400
 
     user = find_user_by_uid(uid)
-    if not user:
-        return jsonify({"success": False, "message": "User not found"}), 401
 
+    if not user:
+        return jsonify({
+            "success": False,
+            "message": "User not found"
+        }), 401
+
+    # Case-insensitive name check
     if user.get("name", "").lower() != name.lower():
-        return jsonify({"success": False, "message": "Invalid credentials"}), 401
+        return jsonify({
+            "success": False,
+            "message": "Invalid credentials"
+        }), 401
 
     return jsonify({
         "success": True,
@@ -226,3 +214,4 @@ def login_rfid():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     socketio.run(app, host="0.0.0.0", port=port)
+
