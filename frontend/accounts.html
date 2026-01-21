@@ -28,6 +28,30 @@
 
     body { display: flex; }
 
+    
+table th, table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+table th {
+  text-align: left;
+  background: #f9fafb;
+}
+
+.action-btn {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.edit { background:#38bdf8;color:#000 }
+.delete { background:#ef4444;color:#fff }
+
+
+
     /* SIDEBAR */
     #sidebar {
       width: 64px;
@@ -227,6 +251,31 @@
       </div>
 
     </div>
+    <hr style="margin:40px 0">
+
+<h2 style="margin-bottom:16px">Registered Cards</h2>
+
+<select id="filterCottage">
+  <option value="">All Cottages</option>
+  <option value="COTTAGE-1">Cottage 1</option>
+  <option value="COTTAGE-2">Cottage 2</option>
+  <option value="COTTAGE-3">Cottage 3</option>
+  <option value="COTTAGE-4">Cottage 4</option>
+</select>
+
+<table id="usersTable" style="width:100%;margin-top:16px;border-collapse:collapse">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Employee ID</th>
+      <th>Access</th>
+      <th>Valid Until</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
     <footer>© Smart Cottage 2026</footer>
   </div>
@@ -300,6 +349,54 @@
       uidInput.value = "";
       log.textContent = "Cleared.";
     };
+
+    const tableBody = document.querySelector("#usersTable tbody");
+const filter = document.getElementById("filterCottage");
+
+async function loadUsers() {
+  const cottage = filter.value;
+  const url = cottage ? `/api/users?cottage=${cottage}` : "/api/users";
+
+  const res = await fetch(url);
+  const users = await res.json();
+
+  tableBody.innerHTML = "";
+
+  users.forEach(u => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${u.name || ""}</td>
+      <td>${u.employee_id || ""}</td>
+      <td>${u.access_level}</td>
+      <td>${u.valid_until || "-"}</td>
+      <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : ""}</td>
+      <td>
+        <button class="action-btn edit" onclick="editUser('${u.uid}')">Edit</button>
+        <button class="action-btn delete" onclick="deleteUser('${u.uid}')">Delete</button>
+      </td>
+    `;
+
+    tableBody.appendChild(tr);
+  });
+}
+
+filter.addEventListener("change", loadUsers);
+
+async function deleteUser(uid) {
+  if (!confirm("Delete this user?")) return;
+  await fetch(`/api/users/${uid}`, { method: "DELETE" });
+  loadUsers();
+}
+
+function editUser(uid) {
+  alert("Edit modal next step 😉");
+}
+
+loadUsers();
+
   </script>
 </body>
 </html>
+
+
