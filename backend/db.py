@@ -25,6 +25,27 @@ taps = db["taps"]
 # ------------------------
 # USER OPERATIONS
 # ------------------------
+def get_users(cottage=None, sort_by=None):
+    query = {}
+    if cottage:
+        query["cottage"] = cottage
+
+    users_list = list(users.find(query, {"_id": 0}))
+
+    # ---- SORTING ----
+    if sort_by == "date_desc":
+        users_list.sort(
+            key=lambda x: x.get("created_at", datetime.min),
+            reverse=True
+        )
+
+    elif sort_by == "access_level":
+        order = {"premium": 1, "basic": 2, "guest": 3, "admin": 4}
+        users_list.sort(
+            key=lambda x: order.get(x.get("access_level", ""), 99)
+        )
+
+    return users_list
 
 def find_user_by_name_and_employee(name, employee_id):
     try:
