@@ -3,6 +3,7 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
+from db import get_users
 from db import (
     find_user_by_name_and_employee,
     register_user,
@@ -57,6 +58,15 @@ def tap_card():
         "user": user
     })
 
+
+
+@app.route("/api/users")
+def get_all_users():
+    cottage = request.args.get("cottage")
+    sort_by = request.args.get("sort")
+
+    users = get_users(cottage=cottage, sort_by=sort_by)
+    return jsonify(users)
 # -------------------------------------------------
 # ESP32 CHECK ACCESS
 # -------------------------------------------------
