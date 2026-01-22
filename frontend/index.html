@@ -1,79 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smart Cottage System – Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <!-- Fonts & Icons -->
-<link href="https://fonts.googleapis.com/css?familyNunito:400,600,700,800" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+
+<!-- Tailwind -->
+<link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css"/>
 
 <style>
+:root{
+  --bg:#eef4ff;
+  --card:#ffffff;
+  --primary:#2563eb;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+}
+
 *{box-sizing:border-box}
+
 body{
   margin:0;
-  font-family:'Nunito',sans-serif;
-  background:#eef3f9;
-  display:flex;
-  color:#1f2937;
+  font-family:Nunito,system-ui;
+  background:var(--bg);
+  color:var(--text);
 }
 
 /* SIDEBAR */
-.sidebar{
-  width:240px;
-  background:#fff;
-  height:100vh;
-  padding:20px;
-  box-shadow:2px 0 12px rgba(0,0,0,.05);
+#sidebar{
+  width:64px;
+  transition:all .3s ease;
+  z-index:50;
 }
-.sidebar h2{
-  font-size:18px;
-  font-weight:800;
-  color:#2563eb;
-  margin-bottom:30px;
+#sidebar span{
+  opacity:0;
+  white-space:nowrap;
+  transition:opacity .2s ease;
 }
-.sidebar ul{list-style:none;padding:0}
-.sidebar li{margin-bottom:12px}
-.sidebar a{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:10px 14px;
-  border-radius:8px;
-  color:#374151;
-  text-decoration:none;
-  font-weight:600;
+#sidebar:hover{
+  width:170px;
 }
-.sidebar a.active,
-.sidebar a:hover{
-  background:#e8f0ff;
-  color:#2563eb;
+#sidebar:hover span{
+  opacity:1;
 }
 
-/* MAIN */
+/* MAIN SHIFT */
 .main{
-  flex:1;
+  margin-left:64px;
+  transition:margin-left .3s ease;
   padding:24px;
-  overflow-y:auto;
+  height:100vh;
+  overflow:auto;
+}
+#sidebar:hover ~ .main{
+  margin-left:170px;
 }
 
 /* HEADER */
-.topbar{
+.header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:24px;
+  margin-bottom:20px;
 }
-.topbar h1{
-  font-size:24px;
+.header h1{
+  font-size:22px;
   font-weight:800;
 }
-.avatar{
-  width:36px;
-  height:36px;
-  border-radius:50%;
+.profile{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
 /* STATS */
@@ -81,47 +83,44 @@ body{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:16px;
-  margin-bottom:24px;
+  margin-bottom:20px;
 }
-.stat-card{
-  background:#fff;
-  border-radius:12px;
+.stat{
+  background:var(--card);
   padding:16px;
+  border-radius:14px;
+  box-shadow:0 6px 16px rgba(0,0,0,.06);
   display:flex;
   justify-content:space-between;
   align-items:center;
-  box-shadow:0 6px 18px rgba(0,0,0,.05);
 }
-.stat-card h4{
-  font-size:14px;
-  color:#6b7280;
-  margin:0;
+.stat h3{
+  font-size:13px;
+  color:var(--muted);
 }
-.stat-card p{
+.stat p{
   font-size:22px;
   font-weight:800;
-  margin-top:4px;
 }
-.icon{
-  background:#eef2ff;
-  color:#2563eb;
-  padding:12px;
-  border-radius:10px;
-  font-size:18px;
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:20px;
 }
 
 /* CARD */
 .card{
-  background:#fff;
-  border-radius:14px;
-  padding:20px;
-  box-shadow:0 8px 24px rgba(0,0,0,.06);
-  margin-bottom:24px;
+  background:var(--card);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 8px 20px rgba(0,0,0,.06);
 }
 .card h3{
-  margin:0 0 12px;
   font-size:16px;
   font-weight:800;
+  margin-bottom:12px;
 }
 
 /* TABLE */
@@ -131,66 +130,84 @@ table{
 }
 th,td{
   padding:10px;
+  border-bottom:1px solid var(--border);
   font-size:13px;
-  border-bottom:1px solid #e5e7eb;
 }
 th{
-  background:#f3f6fb;
+  background:#f3f6ff;
   text-align:left;
 }
 
-/* USER DISTRIBUTION */
-.distribution{
-  display:flex;
-  gap:32px;
-  align-items:center;
-  flex-wrap:wrap;
-}
-.legend{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.legend-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size:14px;
-  font-weight:600;
-}
-.dot{
-  width:12px;
-  height:12px;
-  border-radius:50%;
-}
-.dot.guest{background:#60a5fa}
-.dot.basic{background:#34d399}
-.dot.premium{background:#fbbf24}
-.dot.admin{background:#f87171}
-
-footer{
-  text-align:center;
-  font-size:12px;
-  color:#6b7280;
-  margin-top:24px;
+/* BUTTON */
+.btn{
+  background:var(--primary);
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
 }
 
-@media(max-width:1024px){
-  .stats{grid-template-columns:repeat(2,1fr)}
+/* LIST */
+.list{
+  font-size:13px;
+}
+.list div{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+
+/* CHART */
+.chart{
+  height:200px;
+  background:linear-gradient(135deg,#dbeafe,#eff6ff);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#2563eb;
+  font-weight:700;
 }
 </style>
 </head>
 
-<body>
+<body class="flex">
 
 <!-- SIDEBAR -->
-<div class="sidebar">
-  <h2>Smart Cottage System</h2>
-  <ul>
-    <li><a class="active"><i class="fas fa-home"></i>Dashboard</a></li>
-    <li><a><i class="fas fa-users"></i>Guests</a></li>
-    <li><a><i class="fas fa-chart-bar"></i>Reports</a></li>
-    <li><a><i class="fas fa-cog"></i>Settings</a></li>
+<div id="sidebar" class="fixed h-screen bg-white shadow px-4">
+  <ul class="mt-10 space-y-6 text-gray-600">
+
+    <li>
+      <a class="flex items-center text-blue-600 font-semibold">
+        <i class="fas fa-home w-6 text-center"></i>
+        <span class="ml-3">Dashboard</span>
+      </a>
+    </li>
+
+    <li>
+      <a class="flex items-center hover:text-blue-500">
+        <i class="fas fa-chart-line w-6 text-center"></i>
+        <span class="ml-3">Reports</span>
+      </a>
+    </li>
+
+    <li>
+      <a class="flex items-center hover:text-blue-500">
+        <i class="fas fa-project-diagram w-6 text-center"></i>
+        <span class="ml-3">Architecture</span>
+      </a>
+    </li>
+
+    <li class="pt-6 border-t">
+      <a class="flex items-center hover:text-red-500">
+        <i class="fas fa-sign-out-alt w-6 text-center"></i>
+        <span class="ml-3">Logout</span>
+      </a>
+    </li>
+
   </ul>
 </div>
 
@@ -198,143 +215,116 @@ footer{
 <div class="main">
 
   <!-- HEADER -->
-  <div class="topbar">
+  <div class="header">
     <h1>Dashboard</h1>
-    <img src="https://i.pravatar.cc/40" class="avatar">
+    <div class="profile">
+      <i class="far fa-bell"></i>
+      <strong>Admin</strong>
+    </div>
   </div>
 
   <!-- STATS -->
   <div class="stats">
-    <div class="stat-card">
-      <div><h4>Active Guests</h4><p id="guestCount">0</p></div>
-      <div class="icon"><i class="fas fa-users"></i></div>
+    <div class="stat">
+      <div>
+        <h3>Total Cottages</h3>
+        <p>—</p>
+      </div>
+      <i class="fas fa-home"></i>
     </div>
-    <div class="stat-card">
-      <div><h4>Basic</h4><p id="basicCount">0</p></div>
-      <div class="icon"><i class="fas fa-user"></i></div>
+
+    <div class="stat">
+      <div>
+        <h3>Active Guests</h3>
+        <p id="activeGuests">0</p>
+      </div>
+      <i class="fas fa-user-friends"></i>
     </div>
-    <div class="stat-card">
-      <div><h4>Premium</h4><p id="premiumCount">0</p></div>
-      <div class="icon"><i class="fas fa-star"></i></div>
+
+    <div class="stat">
+      <div>
+        <h3>Revenue</h3>
+        <p>—</p>
+      </div>
+      <i class="fas fa-wallet"></i>
     </div>
-    <div class="stat-card">
-      <div><h4>Admin</h4><p id="adminCount">0</p></div>
-      <div class="icon"><i class="fas fa-user-shield"></i></div>
+
+    <div class="stat">
+      <div>
+        <h3>Occupancy</h3>
+        <p>—</p>
+      </div>
+      <i class="fas fa-chart-pie"></i>
     </div>
   </div>
 
-  <!-- DATABASE -->
-  <div class="card">
-    <h3>Registered Cards Database</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Employee ID</th>
-          <th>Access Level</th>
-          <th>Valid Until</th>
-          <th>Cottage</th>
-        </tr>
-      </thead>
-      <tbody id="usersTable"></tbody>
-    </table>
-  </div>
+  <!-- GRID -->
+  <div class="grid">
 
-  <!-- USER DISTRIBUTION (MERGED BELOW DATABASE) -->
-  <div class="card">
-    <h3>User Distribution</h3>
+    <div class="card">
+      <div class="flex justify-between items-center mb-3">
+        <h3>Registered Cards Database</h3>
+        <button class="btn" id="refreshBtn">Update Database</button>
+      </div>
 
-    <div class="distribution">
-      <div id="userChart" class="ct-chart ct-perfect-fourth" style="width:260px;"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Employee ID</th>
+            <th>Access Level</th>
+            <th>Valid Until</th>
+            <th>Cottage</th>
+          </tr>
+        </thead>
+        <tbody id="usersTable"></tbody>
+      </table>
+    </div>
 
-      <div class="legend">
-        <div class="legend-item"><span class="dot guest"></span> Guest: <span id="lgGuest">0</span></div>
-        <div class="legend-item"><span class="dot basic"></span> Basic: <span id="lgBasic">0</span></div>
-        <div class="legend-item"><span class="dot premium"></span> Premium: <span id="lgPremium">0</span></div>
-        <div class="legend-item"><span class="dot admin"></span> Admin: <span id="lgAdmin">0</span></div>
+    <div class="grid gap-5">
+      <div class="card">
+        <h3>Recent Bookings</h3>
+        <div class="list">
+          <div><span>—</span><span>—</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Cottage Occupancy</h3>
+        <div class="chart">CHART PLACEHOLDER</div>
       </div>
     </div>
-  </div>
 
-  <footer>© Smart Cottage 2026</footer>
+  </div>
 </div>
 
-<!-- SCRIPTS -->
-<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-<script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
-
 <script>
-const usersTable = document.getElementById("usersTable");
-const guestEl = document.getElementById("guestCount");
-const basicEl = document.getElementById("basicCount");
-const premiumEl = document.getElementById("premiumCount");
-const adminEl = document.getElementById("adminCount");
+const API_BASE = "";
 
-const lgGuest = document.getElementById("lgGuest");
-const lgBasic = document.getElementById("lgBasic");
-const lgPremium = document.getElementById("lgPremium");
-const lgAdmin = document.getElementById("lgAdmin");
-
-let userChart;
-
-/* LOAD USERS */
 async function loadUsers(){
-  const res = await fetch("/api/users");
-  const users = await res.json();
-  usersTable.innerHTML="";
-  users.forEach(u=>{
-    usersTable.innerHTML+=`
-      <tr>
+  try{
+    const res = await fetch(`${API_BASE}/api/users`);
+    const users = await res.json();
+    document.getElementById("activeGuests").textContent = users.length;
+
+    const tbody = document.getElementById("usersTable");
+    tbody.innerHTML = "";
+    users.forEach(u=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
         <td>${u.name||"-"}</td>
         <td>${u.employee_id||"-"}</td>
         <td>${u.access_level||"-"}</td>
         <td>${u.valid_until||"-"}</td>
         <td>${u.cottage||"-"}</td>
-      </tr>`;
-  });
+      `;
+      tbody.appendChild(tr);
+    });
+  }catch(e){console.error(e);}
 }
 
-/* LOAD COUNTS + CHART */
-async function loadUserCounts(){
-  const res = await fetch("/api/user_counts");
-  const d = await res.json();
-
-  const guest=d.guest||0;
-  const basic=d.basic||0;
-  const premium=d.premium||0;
-  const admin=d.admin||0;
-
-  guestEl.textContent=guest;
-  basicEl.textContent=basic;
-  premiumEl.textContent=premium;
-  adminEl.textContent=admin;
-
-  lgGuest.textContent=guest;
-  lgBasic.textContent=basic;
-  lgPremium.textContent=premium;
-  lgAdmin.textContent=admin;
-
-  renderChart(guest,basic,premium,admin);
-}
-
-/* DONUT CHART */
-function renderChart(g,b,p,a){
-  if(userChart) userChart.detach();
-
-  userChart = new Chartist.Pie('#userChart',{
-    series:[g,b,p,a],
-    labels:['Guest','Basic','Premium','Admin']
-  },{
-    donut:true,
-    donutWidth:40,
-    showLabel:true
-  });
-}
-
-/* INIT */
+document.getElementById("refreshBtn").onclick = loadUsers;
 loadUsers();
-loadUserCounts();
-setInterval(loadUserCounts,5000);
 </script>
 
 </body>
