@@ -1,208 +1,268 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Smart Cottage System — Register Card</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Cottage System – Dashboard</title>
 
-  <link href="https://fonts.googleapis.com/css?family=Nunito:400,700,800" rel="stylesheet">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
 
-  <style>
-    :root {
-      --bg: #e8f2ff;
-      --primary: #1f6feb;
-      --muted: #6b7280;
-      --card-bg: rgba(255, 255, 255, 0.75);
-    }
+<!-- Tailwind -->
+<link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css"/>
 
-    * { box-sizing: border-box; }
+<!-- Chart.js (NEW – added only) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: 'Nunito', system-ui, -apple-system;
-      background: var(--bg);
-      color: #111827;
-    }
+<style>
+:root{
+  --bg:#eef4ff;
+  --card:#ffffff;
+  --primary:#2563eb;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+}
 
-    body { display: flex; }
+*{box-sizing:border-box}
 
-    /* SIDEBAR */
-    #sidebar {
-      width: 64px;
-      background: #ffffff;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      padding: 16px;
-      transition: all 0.3s;
-    }
-    #sidebar span { opacity: 0; transition: opacity 0.2s; white-space: nowrap; }
-    #sidebar:hover { width: 170px; }
-    #sidebar:hover span { opacity: 1; }
-    #sidebar ul { margin-top: 32px; list-style: none; padding: 0; color: #4b5563; }
-    #sidebar li { margin-bottom: 16px; }
-    #sidebar a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: inherit;
-    }
-    #sidebar a:hover { color: var(--primary); }
+body{
+  margin:0;
+  font-family:Nunito,system-ui;
+  background:var(--bg);
+  color:var(--text);
+}
 
-    /* MAIN */
-    .main { flex: 1; display: flex; flex-direction: column; }
+/* SIDEBAR */
+#sidebar{
+  width:64px;
+  transition:all .3s ease;
+  z-index:50;
+}
+#sidebar span{
+  opacity:0;
+  white-space:nowrap;
+  transition:opacity .2s ease;
+}
+#sidebar:hover{
+  width:170px;
+}
+#sidebar:hover span{
+  opacity:1;
+}
 
-    .page {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 32px;
-      gap: 32px;
-    }
+/* MAIN SHIFT */
+.main{
+  margin-left:64px;
+  transition:margin-left .3s ease;
+  padding:24px;
+  height:100vh;
+  overflow:auto;
+}
+#sidebar:hover ~ .main{
+  margin-left:170px;
+}
 
-    .branding { text-align: center; }
-    .branding h1 {
-      font-size: 48px;
-      margin: 0;
-      color: var(--primary);
-      font-weight: 800;
-    }
-    .branding p {
-      margin-top: 12px;
-      font-size: 22px;
-      color: #1f2937;
-    }
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+.header h1{
+  font-size:22px;
+  font-weight:800;
+}
+.profile{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
 
-    /* FORM WRAP */
-    .form-wrap {
-      width: 100%;
-      max-width: 900px;
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(15,23,42,0.08);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
+/* STATS */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-bottom:20px;
+}
+.stat{
+  background:var(--card);
+  padding:16px;
+  border-radius:14px;
+  box-shadow:0 6px 16px rgba(0,0,0,.06);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.stat h3{
+  font-size:13px;
+  color:var(--muted);
+}
+.stat p{
+  font-size:22px;
+  font-weight:800;
+}
 
-    label { display: block; margin-top: 12px; font-size: 13px; color: #374151; }
-    input, select { width: 100%; padding: 12px 14px; margin-top: 6px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; }
-    input[readonly] { background: #f3f4f6; }
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:20px;
+}
 
-    .row { display: flex; gap: 10px; }
-    .col { flex: 1; }
+/* CARD */
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 8px 20px rgba(0,0,0,.06);
+}
+.card h3{
+  font-size:16px;
+  font-weight:800;
+  margin-bottom:12px;
+}
 
-    .actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
-    button {
-      padding: 12px 16px;
-      border-radius: 10px;
-      border: 0;
-      cursor: pointer;
-      background: var(--primary);
-      color: #ffffff;
-      font-weight: 600;
-      flex: 1;
-    }
-    button.secondary { background: transparent; color: var(--primary); border: 1px solid rgba(31,111,235,0.3); }
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  padding:10px;
+  border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+th{
+  background:#f3f6ff;
+  text-align:left;
+}
 
-    #log { margin-top: 16px; font-size: 13px; color: #374151; min-height: 24px; }
+/* BUTTON */
+.btn{
+  background:var(--primary);
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+}
 
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-    th { background: #eef2ff; }
+/* LIST */
+.list{
+  font-size:13px;
+}
+.list div{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
 
-    footer { text-align: center; padding: 16px; font-size: 12px; color: var(--muted); }
-
-    @media (max-width: 900px) { .page { gap: 20px; text-align: center; } }
-  </style>
+/* CHART */
+.chart{
+  height:240px;
+  background:#f8fafc;
+  border-radius:12px;
+  padding:10px;
+}
+</style>
 </head>
 
-<body>
-  <!-- SIDEBAR -->
-  <div id="sidebar">
-    <ul>
-      <li><a href="/index.html"><i class="fas fa-home"></i><span>Home</span></a></li>
-      <li><a href="#"><i class="fas fa-chart-line"></i><span>Reports</span></a></li>
-      <li><a href="#"><i class="fas fa-project-diagram"></i><span>Architecture</span></a></li>
-      <li><a href="/accounts.html"><i class="fas fa-user"></i><span>Accounts</span></a></li>
-    </ul>
+<body class="flex">
+
+<!-- SIDEBAR -->
+<div id="sidebar" class="fixed h-screen bg-white shadow px-4">
+  <ul class="mt-10 space-y-6 text-gray-600">
+    <li>
+      <a class="flex items-center text-blue-600 font-semibold">
+        <i class="fas fa-home w-6 text-center"></i>
+        <span class="ml-3">Dashboard</span>
+      </a>
+    </li>
+
+    <li>
+      <a class="flex items-center hover:text-blue-500">
+        <i class="fas fa-chart-line w-6 text-center"></i>
+        <span class="ml-3">Reports</span>
+      </a>
+    </li>
+
+    <li>
+      <a class="flex items-center hover:text-blue-500">
+        <i class="fas fa-project-diagram w-6 text-center"></i>
+        <span class="ml-3">Architecture</span>
+      </a>
+    </li>
+
+    <li class="pt-6 border-t">
+      <a class="flex items-center hover:text-red-500">
+        <i class="fas fa-sign-out-alt w-6 text-center"></i>
+        <span class="ml-3">Logout</span>
+      </a>
+    </li>
+  </ul>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Dashboard</h1>
+    <div class="profile">
+      <i class="far fa-bell"></i>
+      <strong>Admin</strong>
+    </div>
   </div>
 
-  <!-- MAIN -->
-  <div class="main">
-    <div class="branding">
-      <h1>Smart Cottage System</h1>
-      <p>Innovation at the Heart of Home</p>
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <div>
+        <h3>Total Cottages</h3>
+        <p>—</p>
+      </div>
+      <i class="fas fa-home"></i>
     </div>
 
-    <!-- REGISTRATION FORM -->
-    <div class="form-wrap">
-      <h3>Register New Card</h3>
-      <div class="row">
-        <div class="col">
-          <label>UID</label>
-          <input type="text" id="uid" readonly placeholder="Tap a card">
-        </div>
-        <div class="col">
-          <label>Name</label>
-          <input type="text" id="name" placeholder="Full Name">
-        </div>
+    <div class="stat">
+      <div>
+        <h3>Active Guests</h3>
+        <p id="activeGuests">0</p>
       </div>
-      <div class="row">
-        <div class="col">
-          <label>Employee ID</label>
-          <input type="text" id="employee_id" placeholder="ID Number">
-        </div>
-        <div class="col">
-          <label>Access Level</label>
-          <select id="access_level">
-            <option value="Guest">Guest</option>
-            <option value="Basic">Basic</option>
-            <option value="Premium">Premium</option>
-            <option value="Admin">Admin</option>
-          </select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <label>Cottage</label>
-          <select id="cottage">
-            <option value="COTTAGE-1">Cottage 1</option>
-            <option value="COTTAGE-2">Cottage 2</option>
-            <option value="COTTAGE-3">Cottage 3</option>
-            <option value="COTTAGE-4">Cottage 4</option>
-          </select>
-        </div>
-        <div class="col">
-          <label>Valid Until</label>
-          <input type="date" id="valid_until">
-        </div>
-      </div>
-      <div class="actions">
-        <button id="registerBtn">Register Card</button>
-        <button class="secondary" onclick="clearForm()">Clear</button>
-      </div>
-      <div id="log"></div>
+      <i class="fas fa-user-friends"></i>
     </div>
 
-    <!-- DATABASE TABLE -->
-    <div class="form-wrap">
-      <h3>Registered Cards Database</h3>
-
-      <div class="actions">
-        <button onclick="loadUsers()">All</button>
-        <button onclick="loadUsers('COTTAGE-1')">Cottage 1</button>
-        <button onclick="loadUsers('COTTAGE-2')">Cottage 2</button>
-        <button onclick="loadUsers('COTTAGE-3')">Cottage 3</button>
-        <button onclick="loadUsers('COTTAGE-4')">Cottage 4</button>
+    <div class="stat">
+      <div>
+        <h3>Revenue</h3>
+        <p>—</p>
       </div>
+      <i class="fas fa-wallet"></i>
+    </div>
 
-      <div class="actions">
-        <button class="secondary" onclick="sortUsers('date_desc')">Sort by Latest</button>
-        <button class="secondary" onclick="sortUsers('access_level')">Sort by Access Level</button>
+    <div class="stat">
+      <div>
+        <h3>Occupancy</h3>
+        <p>—</p>
+      </div>
+      <i class="fas fa-chart-pie"></i>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="grid">
+
+    <!-- TABLE -->
+    <div class="card">
+      <div class="flex justify-between items-center mb-3">
+        <h3>Registered Cards Database</h3>
+        <button class="btn" id="refreshBtn">Update Database</button>
       </div>
 
       <table>
@@ -219,111 +279,122 @@
       </table>
     </div>
 
-    <footer>© Smart Cottage 2026</footer>
+    <!-- RIGHT COLUMN -->
+    <div class="grid gap-5">
+
+      <div class="card">
+        <h3>Recent Bookings</h3>
+        <div class="list">
+          <div><span>—</span><span>—</span></div>
+        </div>
+      </div>
+
+      <!-- 🔥 NEW BAR CHART (ADDED ONLY) -->
+      <div class="card">
+        <h3>User Access Distribution</h3>
+        <div class="chart">
+          <canvas id="userBarChart"></canvas>
+        </div>
+      </div>
+
+    </div>
   </div>
+</div>
 
-  <!-- JS -->
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-  <script>
-    const socket = io();
+<script>
+const API_BASE = "";
 
-    const uidInput = document.getElementById("uid");
-    const nameInput = document.getElementById("name");
-    const employeeInput = document.getElementById("employee_id");
-    const accessSelect = document.getElementById("access_level");
-    const cottageSelect = document.getElementById("cottage");
-    const validUntilInput = document.getElementById("valid_until");
-    const registerBtn = document.getElementById("registerBtn");
-    const log = document.getElementById("log");
-    const usersTable = document.getElementById("usersTable");
+async function loadUsers(){
+  const res = await fetch(`${API_BASE}/api/users`);
+  const users = await res.json();
 
-    let currentCottage = "";
-    let currentSort = "";
+  document.getElementById("activeGuests").textContent = users.length;
 
-    // -------------------------------
-    // SOCKET.IO: RFID tap
-    // -------------------------------
-    socket.on("card_tapped", data => {
-      if (!data || !data.uid) return;
-      uidInput.value = data.uid;
-      if (data.access === "granted") log.innerText = `Card ${data.uid} — ACCESS GRANTED`;
-      else if (data.access === "denied") log.innerText = `Card ${data.uid} — ACCESS DENIED`;
-      else log.innerText = `Card tapped: ${data.uid}`;
-    });
+  const tbody = document.getElementById("usersTable");
+  tbody.innerHTML = "";
 
-    // -------------------------------
-    // REGISTER CARD
-    // -------------------------------
-    registerBtn.addEventListener("click", async () => {
-      if (!uidInput.value || !nameInput.value || !employeeInput.value) {
-        log.innerText = "Please complete all required fields";
-        return;
+  users.forEach(u=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.name || "-"}</td>
+      <td>${u.employee_id || "-"}</td>
+      <td>${u.access_level || "-"}</td>
+      <td>${u.valid_until || "-"}</td>
+      <td>${u.cottage || "-"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+let userChart = null;
+
+async function loadUserChart(){
+  const res = await fetch("/api/user_counts");
+  const counts = await res.json();
+
+  const labels = ["Guest", "Basic", "Premium", "Admin"];
+  const values = [
+    counts.guest || 0,
+    counts.basic || 0,
+    counts.premium || 0,
+    counts.admin || 0
+  ];
+
+  const total = values.reduce((a,b)=>a+b,0) || 1;
+  const percentages = values.map(v => ((v / total) * 100).toFixed(1));
+
+  if(userChart) userChart.destroy();
+
+  userChart = new Chart(
+    document.getElementById("userBarChart"),
+    {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: "Users (%)",
+          data: percentages,
+          backgroundColor: [
+            "#60a5fa",
+            "#34d399",
+            "#fbbf24",
+            "#f87171"
+          ],
+          borderRadius: 8
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx =>
+                `${ctx.raw}% (${values[ctx.dataIndex]} users)`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: v => v + "%"
+            }
+          }
+        }
       }
-
-      const payload = {
-        uid: uidInput.value,
-        name: nameInput.value,
-        employee_id: employeeInput.value,
-        access_level: accessSelect.value,
-        valid_until: validUntilInput.value,
-        cottage: cottageSelect.value
-      };
-
-      const res = await fetch("/api/register_card", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        log.innerText = "Card registered successfully";
-        clearForm();
-        loadUsers();
-      } else log.innerText = "Failed to register card";
-    });
-
-    // -------------------------------
-    // LOAD USERS / DATABASE TABLE
-    // -------------------------------
-    async function loadUsers(cottage = currentCottage) {
-      currentCottage = cottage;
-      let url = "/api/users?";
-      if (cottage) url += `cottage=${encodeURIComponent(cottage)}&`;
-      if (currentSort) url += `sort=${encodeURIComponent(currentSort)}`;
-
-      const res = await fetch(url);
-      const users = await res.json();
-
-      usersTable.innerHTML = "";
-      users.forEach(u => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${u.name || "-"}</td>
-          <td>${u.employee_id || "-"}</td>
-          <td>${u.access_level || "-"}</td>
-          <td>${u.valid_until || "-"}</td>
-          <td>${u.cottage || "-"}</td>
-        `;
-        usersTable.appendChild(tr);
-      });
     }
+  );
+}
 
-    function sortUsers(type) {
-      currentSort = type;
-      loadUsers();
-    }
+document.getElementById("refreshBtn").onclick = () => {
+  loadUsers();
+  loadUserChart();
+};
 
-    function clearForm() {
-      uidInput.value = "";
-      nameInput.value = "";
-      employeeInput.value = "";
-      accessSelect.value = "Guest";
-      cottageSelect.value = "COTTAGE-1";
-      validUntilInput.value = "";
-      log.innerText = "";
-    }
+loadUsers();
+loadUserChart();
+</script>
 
-    loadUsers();
-  </script>
 </body>
 </html>
