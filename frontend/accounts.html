@@ -175,132 +175,119 @@
         <p>Innovation at the Heart of Home</p>
       </div>
 
-      <div class="form-wrap">
-        <form id="regForm" autocomplete="off">
+    
+   <div class="form-wrap" style="width:100%; max-width:900px">
+  <h3 style="margin-bottom:10px">Registered Cards</h3>
 
-          <label>Cottage Assignment
-            <select id="cottage">
-              <option value="COTTAGE-1">Cottage 1</option>
-              <option value="COTTAGE-2">Cottage 2</option>
-              <option value="COTTAGE-3">Cottage 3</option>
-              <option value="COTTAGE-4">Cottage 4</option>
-            </select>
-          </label>
+  <!-- FILTERS -->
+  <div class="actions">
+    <button onclick="loadUsers()">All</button>
+    <button onclick="loadUsers('COTTAGE-1')">Cottage 1</button>
+    <button onclick="loadUsers('COTTAGE-2')">Cottage 2</button>
+    <button onclick="loadUsers('COTTAGE-3')">Cottage 3</button>
+    <button onclick="loadUsers('COTTAGE-4')">Cottage 4</button>
+  </div>
 
-          <label>Card UID
-            <input id="uid" type="text" readonly placeholder="Tap a card...">
-          </label>
+  <!-- SORT -->
+  <div class="actions">
+    <button class="secondary" onclick="sortUsers('date_desc')">
+      Sort by Latest
+    </button>
+    <button class="secondary" onclick="sortUsers('access_level')">
+      Sort by Access Level
+    </button>
+  </div>
 
-          <label>Name
-            <input id="name" type="text" required>
-          </label>
+  <!-- TABLE -->
+  <table id="usersTable" style="width:100%; margin-top:15px; border-collapse:collapse">
+    <thead>
+      <tr style="background:#eef2ff">
+        <th>Name</th>
+        <th>Employee ID</th>
+        <th>Access Level</th>
+        <th>Valid Until</th>
+        <th>Cottage</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
-          <div class="row">
-            <div class="col">
-              <label>Employee ID
-                <input id="employee_id" type="text">
-              </label>
-            </div>
-            <div class="col">
-              <label>Access Level
-                        <select id="access_level" required>
-                      <option value="guest">Guest</option>
-                      <option value="basic">Basic</option>
-                      <option value="premium">Premium</option>
-                      <option value="admin">Admin</option>
-                      </select>
-
-              </label>
-            </div>
-          </div>
-
-          <label>Valid Until
-            <input id="valid_until" type="date">
-          </label>
-
-          <div class="actions">
-            <button type="submit">Save</button>
-            <button type="button" class="secondary" id="clearBtn">Clear</button>
-          </div>
-
-          <div id="log">Waiting for card...</div>
-        </form>
-      </div>
-
-    </div>
 
     <footer>© Smart Cottage 2026</footer>
   </div>
 
   <!-- JS -->
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-  <script>
-    const socket = io(window.location.origin);
 
-    const uidInput = document.getElementById("uid");
-    const log = document.getElementById("log");
-    const form = document.getElementById("regForm");
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script>
+const socket = io();
 
-    socket.on("connect", () => {
-      log.textContent = "Connected. Tap a card.";
-    });
+// -------------------------------
+// ELEMENTS
+// -------------------------------
+const tableBody = document.querySelector("#usersTable tbody");
 
-    socket.on("disconnect", () => {
-      log.textContent = "Disconnected.";
-    });
+// -------------------------------
+// SOCKET.IO (OPTIONAL – SAFE)
+// -------------------------------
+socket.on("rfid", data => {
+  console.log("RFID event:", data);
+});
 
-    // ✅ Functionality: Realtime display of tapped card
-    socket.on("card_tapped", (data) => {
-      if (!data || !data.uid) return;
+// -------------------------------
+// LOAD USERS
+// -------------------------------
+async function loadUsers(cottage = null) {
+  let url = "/api/users";
 
-      uidInput.value = data.uid;
+  if (cottage) {
+    url += `?cottage=${encodeURIComponent(cottage)}`;
+  }
 
-      if (data.access === "granted") {
-        log.textContent = "Card " + data.uid + " — ACCESS GRANTED";
-      } else if (data.access === "denied") {
-        log.textContent = "Card " + data.uid + " — ACCESS DENIED";
-      } else {
-        log.textContent = "Card tapped: " + data.uid;
-      }
-    });
+  const res = await fetch(url);
+  const users = await res.json();
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  renderTable(users);
+}
 
-      if (!uidInput.value) {
-        log.textContent = "Tap a card first.";
-        return;
-      }
+// -------------------------------
+// SORT USERS
+// -------------------------------
+async function sortUsers(sortType) {
+  const res = await fetch(`/api/users?sort=${sortType}`);
+  const users = await res.json();
 
-      const payload = {
-        uid: uidInput.value,
-        name: document.getElementById("name").value,
-        employee_id: document.getElementById("employee_id").value,
-        access_level: document.getElementById("access_level").value,
-        valid_until: document.getElementById("valid_until").value,
-        cottage: document.getElementById("cottage").value
-      };
+  renderTable(users);
+}
 
-      const res = await fetch("/api/register_card", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+// -------------------------------
+// RENDER TABLE
+// -------------------------------
+function renderTable(users) {
+  tableBody.innerHTML = "";
 
-      if (res.ok) {
-        log.textContent = "Card saved.";
-        form.reset();
-        uidInput.value = "";
-      } else {
-        log.textContent = "Save failed.";
-      }
-    });
+  users.forEach(user => {
+    const tr = document.createElement("tr");
 
-    document.getElementById("clearBtn").onclick = () => {
-      form.reset();
-      uidInput.value = "";
-      log.textContent = "Cleared.";
-    };
-  </script>
+    tr.innerHTML = `
+      <td>${user.name}</td>
+      <td>${user.employee_id}</td>
+      <td>${user.access_level}</td>
+      <td>${user.valid_until || "-"}</td>
+      <td>${user.cottage}</td>
+    `;
+
+    tableBody.appendChild(tr);
+  });
+}
+
+// -------------------------------
+// INIT
+// -------------------------------
+loadUsers();
+</script>
+
+
 </body>
 </html>
