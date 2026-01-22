@@ -3,10 +3,7 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
-from datetime import datetime
-
 from db import (
-    users,
     find_user_by_name_and_employee,
     register_user,
     find_user_by_uid,
@@ -36,26 +33,22 @@ def index():
     return send_from_directory(app.static_folder, "index.html")
 
 # -------------------------------------------------
-# ESP32 → TAP CARD
+# ESP32 → Server: Tap Card
 # -------------------------------------------------
 @app.route("/api/tap", methods=["POST"])
 def tap_card():
     data = request.get_json() or {}
-
+    
     uid = data.get("uid")
     reader_cottage = data.get("reader_cottage")
-
+    
     if not uid:
         return jsonify({"error": "missing uid"}), 400
     if not reader_cottage:
         return jsonify({"error": "missing reader_cottage"}), 400
 
     trigger_buzzer_event(uid)
-
-    socketio.emit("card_tapped", {
-        "uid": uid
-    })
-
+    socketio.emit("card_tapped", {"uid": uid})
     user = find_user_by_uid(uid)
 
     return jsonify({
@@ -65,7 +58,7 @@ def tap_card():
     })
 
 # -------------------------------------------------
-# ESP32 → CHECK ACCESS
+# ESP32 CHECK ACCESS
 # -------------------------------------------------
 @app.route("/api/check_access", methods=["POST"])
 def check_access():
@@ -103,19 +96,20 @@ def check_access():
 
     return jsonify({"access": "granted"})
 
+
 # -------------------------------------------------
-# MOBILE APP → LOGIN (NAME + EMPLOYEE ID)
+# Admin → Login User (for Mobile App)
 # -------------------------------------------------
 @app.route("/api/login_user", methods=["POST"])
 def login_user():
     data = request.get_json() or {}
-
     name = data.get("name")
     employee_id = data.get("employee_id")
 
     if not name or not employee_id:
         return jsonify({"success": False, "message": "name and employee_id required"}), 400
 
+    # Use helper function
     user = find_user_by_name_and_employee(name, employee_id)
 
     if not user:
@@ -132,7 +126,7 @@ def login_user():
     })
 
 # -------------------------------------------------
-# ADMIN → REGISTER CARD
+# Admin → Register Card
 # -------------------------------------------------
 @app.route("/api/register_card", methods=["POST"])
 def register_card():
@@ -140,6 +134,10 @@ def register_card():
 
     uid = data.get("uid")
     name = data.get("name")
+    employee_id = data.get("employee_id")
+    access_level = data.get("access_level")
+    valid_until = data.get("valid_until")
+    cottage = data.get("cottage")
 
     if not uid or not name:
         return jsonify({"error": "uid and name required"}), 400
@@ -147,81 +145,33 @@ def register_card():
     doc = {
         "uid": uid,
         "name": name,
-        "employee_id": data.get("employee_id"),
-        "access_level": data.get("access_level", "guest").lower(),
-        "valid_until": data.get("valid_until"),
-        "cottage": data.get("cottage"),
-        "created_at": datetime.utcnow()
+        "employee_id": employee_id,
+        # ✅ SAFETY: force lowercase + default guest
+        "access_level": access_level.lower() if access_level else "guest",
+        "valid_until": valid_until,
+        "cottage": cottage
     }
 
     register_user(doc)
 
     return jsonify({"status": "saved"})
 
-# -------------------------------------------------
-# DASHBOARD → GET ALL USERS (WITH COTTAGE FILTER)
-# -------------------------------------------------
-@app.route("/api/users", methods=["GET"])
-def get_users():
-    cottage = request.args.get("cottage")
-
-    query = {}
-    if cottage:
-        query["cottage"] = cottage
-
-    users_list = list(
-        users.find(query, {
-            "_id": 0,
-            "uid": 1,
-            "name": 1,
-            "employee_id": 1,
-            "access_level": 1,
-            "valid_until": 1,
-            "cottage": 1,
-            "created_at": 1
-        })
-    )
-
-    return jsonify(users_list)
 
 # -------------------------------------------------
-# DASHBOARD → DELETE USER
+# DASHBOARD: Get counts by access level
 # -------------------------------------------------
-@app.route("/api/users/<uid>", methods=["DELETE"])
-def delete_user(uid):
-    users.delete_one({"uid": uid})
-    return jsonify({"status": "deleted"})
-
 # -------------------------------------------------
-# DASHBOARD → UPDATE USER (EDIT)
-# -------------------------------------------------
-@app.route("/api/users/<uid>", methods=["PUT"])
-def update_user(uid):
-    data = request.get_json() or {}
-
-    users.update_one(
-        {"uid": uid},
-        {"$set": {
-            "name": data.get("name"),
-            "employee_id": data.get("employee_id"),
-            "access_level": data.get("access_level"),
-            "valid_until": data.get("valid_until"),
-            "cottage": data.get("cottage")
-        }}
-    )
-
-    return jsonify({"status": "updated"})
-
-# -------------------------------------------------
-# DASHBOARD → USER COUNTS (GRAPH)
+# DASHBOARD: Get counts by access level (mapped for graph)
 # -------------------------------------------------
 @app.route("/api/user_counts")
 def user_counts():
     counts = count_users_by_access_level()
+    print("User counts:", counts)
     return jsonify(counts)
 
+
 # -------------------------------------------------
-# RFID LOGIN (UID + NAME)
+# USER LOGIN (UID + NAME) → RFID login
 # -------------------------------------------------
 @app.route("/api/rfid/login", methods=["POST"])
 def login_rfid():
@@ -236,10 +186,17 @@ def login_rfid():
     user = find_user_by_uid(uid)
 
     if not user:
-        return jsonify({"success": False, "message": "User not found"}), 401
+        return jsonify({
+            "success": False,
+            "message": "User not found"
+        }), 401
 
+    # Case-insensitive name check
     if user.get("name", "").lower() != name.lower():
-        return jsonify({"success": False, "message": "Invalid credentials"}), 401
+        return jsonify({
+            "success": False,
+            "message": "Invalid credentials"
+        }), 401
 
     return jsonify({
         "success": True,
