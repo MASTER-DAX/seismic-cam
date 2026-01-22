@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -57,13 +56,14 @@
     .page {
       flex: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       padding: 32px;
-      gap: 80px;
+      gap: 40px;
     }
 
-    .branding { max-width: 420px; }
+    .branding { max-width: 420px; text-align: center; }
     .branding h1 {
       font-size: 48px;
       margin: 0;
@@ -78,13 +78,14 @@
 
     /* FORM WRAP with BACKDROP FILTER */
     .form-wrap {
-      width: 420px;
+      width: 100%;
+      max-width: 900px;
       background: var(--card-bg);
       border-radius: 16px;
       padding: 24px;
       box-shadow: 0 10px 30px rgba(15,23,42,0.08);
-      backdrop-filter: blur(10px); /* <-- new */
-      -webkit-backdrop-filter: blur(10px); /* Safari */
+      backdrop-filter: blur(10px); 
+      -webkit-backdrop-filter: blur(10px); 
     }
 
     label {
@@ -112,6 +113,7 @@
       margin-top: 18px;
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     button {
@@ -131,12 +133,26 @@
       border: 1px solid rgba(31,111,235,0.3);
     }
 
-    #log {
+    #log, .statusText {
       margin-top: 16px;
       font-size: 13px;
       color: #374151;
       min-height: 24px;
     }
+
+    table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th { background: #eef2ff; }
 
     footer {
       text-align: center;
@@ -147,8 +163,6 @@
 
     @media (max-width: 900px) {
       .page {
-        flex-direction: column;
-        gap: 40px;
         text-align: center;
       }
     }
@@ -169,125 +183,243 @@
 
   <!-- MAIN -->
   <div class="main">
-    <div class="page">
-      <div class="branding">
-        <h1>Smart Cottage System</h1>
-        <p>Innovation at the Heart of Home</p>
+    <div class="branding">
+      <h1>Smart Cottage System</h1>
+      <p>Innovation at the Heart of Home</p>
+    </div>
+
+    <!-- REGISTRATION FORM -->
+    <div class="form-wrap">
+      <h3>Register Card</h3>
+      <div id="log" class="statusText"></div>
+      <div class="row">
+        <div class="col">
+          <label>Name</label>
+          <input type="text" id="name">
+        </div>
+        <div class="col">
+          <label>Employee ID</label>
+          <input type="text" id="employee_id">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>UID</label>
+          <input type="text" id="uid" readonly>
+        </div>
+        <div class="col">
+          <label>Access Level</label>
+          <select id="access_level">
+            <option value="USER">USER</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>Cottage</label>
+          <select id="cottage">
+            <option value="">Select</option>
+            <option value="COTTAGE-1">Cottage 1</option>
+            <option value="COTTAGE-2">Cottage 2</option>
+            <option value="COTTAGE-3">Cottage 3</option>
+            <option value="COTTAGE-4">Cottage 4</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Valid Until</label>
+          <input type="date" id="valid_until">
+        </div>
+      </div>
+      <div class="actions">
+        <button id="registerBtn">Register</button>
+        <button id="clearBtn" class="secondary">Clear</button>
+      </div>
+    </div>
+
+    <!-- LIVE REGISTRATION TABLE -->
+    <div class="form-wrap">
+      <h3>Recently Registered Cards</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Employee ID</th>
+            <th>UID</th>
+            <th>Access Level</th>
+            <th>Cottage</th>
+            <th>Valid Until</th>
+          </tr>
+        </thead>
+        <tbody id="liveTable"></tbody>
+      </table>
+    </div>
+
+    <!-- DATABASE TABLE -->
+    <div class="form-wrap">
+      <h3>Registered Cards Database</h3>
+
+      <!-- FILTERS -->
+      <div class="actions">
+        <button onclick="loadUsers()">All</button>
+        <button onclick="loadUsers('COTTAGE-1')">Cottage 1</button>
+        <button onclick="loadUsers('COTTAGE-2')">Cottage 2</button>
+        <button onclick="loadUsers('COTTAGE-3')">Cottage 3</button>
+        <button onclick="loadUsers('COTTAGE-4')">Cottage 4</button>
       </div>
 
-    
-   <div class="form-wrap" style="width:100%; max-width:900px">
-  <h3 style="margin-bottom:10px">Registered Cards</h3>
+      <!-- SORT -->
+      <div class="actions">
+        <button class="secondary" onclick="sortUsers('date_desc')">Sort by Latest</button>
+        <button class="secondary" onclick="sortUsers('access_level')">Sort by Access Level</button>
+      </div>
 
-  <!-- FILTERS -->
-  <div class="actions">
-    <button onclick="loadUsers()">All</button>
-    <button onclick="loadUsers('COTTAGE-1')">Cottage 1</button>
-    <button onclick="loadUsers('COTTAGE-2')">Cottage 2</button>
-    <button onclick="loadUsers('COTTAGE-3')">Cottage 3</button>
-    <button onclick="loadUsers('COTTAGE-4')">Cottage 4</button>
-  </div>
-
-  <!-- SORT -->
-  <div class="actions">
-    <button class="secondary" onclick="sortUsers('date_desc')">
-      Sort by Latest
-    </button>
-    <button class="secondary" onclick="sortUsers('access_level')">
-      Sort by Access Level
-    </button>
-  </div>
-
-  <!-- TABLE -->
-  <table id="usersTable" style="width:100%; margin-top:15px; border-collapse:collapse">
-    <thead>
-      <tr style="background:#eef2ff">
-        <th>Name</th>
-        <th>Employee ID</th>
-        <th>Access Level</th>
-        <th>Valid Until</th>
-        <th>Cottage</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Employee ID</th>
+            <th>Access Level</th>
+            <th>Valid Until</th>
+            <th>Cottage</th>
+          </tr>
+        </thead>
+        <tbody id="usersTable"></tbody>
+      </table>
+    </div>
 
     <footer>© Smart Cottage 2026</footer>
   </div>
 
   <!-- JS -->
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script>
+    const socket = io();
 
-<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-<script>
-const socket = io();
+    // ELEMENTS
+    const uidInput = document.getElementById("uid");
+    const nameInput = document.getElementById("name");
+    const employeeInput = document.getElementById("employee_id");
+    const accessSelect = document.getElementById("access_level");
+    const cottageSelect = document.getElementById("cottage");
+    const validInput = document.getElementById("valid_until");
+    const registerBtn = document.getElementById("registerBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const log = document.getElementById("log");
+    const liveTable = document.getElementById("liveTable");
+    const usersTable = document.getElementById("usersTable");
 
-// -------------------------------
-// ELEMENTS
-// -------------------------------
-const tableBody = document.querySelector("#usersTable tbody");
+    let liveData = [];
 
-// -------------------------------
-// SOCKET.IO (OPTIONAL – SAFE)
-// -------------------------------
-socket.on("rfid", data => {
-  console.log("RFID event:", data);
-});
+    // SOCKET.IO: live card tapped
+    socket.on("card_tapped", data => {
+      if (!data.uid) return;
 
-// -------------------------------
-// LOAD USERS
-// -------------------------------
-async function loadUsers(cottage = null) {
-  let url = "/api/users";
+      uidInput.value = data.uid;
+      log.innerText = `Card tapped: ${data.uid}`;
+    });
 
-  if (cottage) {
-    url += `?cottage=${encodeURIComponent(cottage)}`;
-  }
+    // REGISTER BUTTON
+    registerBtn.addEventListener("click", async () => {
+      if (!uidInput.value || !nameInput.value || !employeeInput.value) {
+        log.innerText = "Complete all required fields";
+        return;
+      }
 
-  const res = await fetch(url);
-  const users = await res.json();
+      const payload = {
+        uid: uidInput.value,
+        name: nameInput.value,
+        employee_id: employeeInput.value,
+        access_level: accessSelect.value,
+        cottage: cottageSelect.value,
+        valid_until: validInput.value
+      };
 
-  renderTable(users);
-}
+      const res = await fetch("/api/register_card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-// -------------------------------
-// SORT USERS
-// -------------------------------
-async function sortUsers(sortType) {
-  const res = await fetch(`/api/users?sort=${sortType}`);
-  const users = await res.json();
+      if (res.ok) {
+        log.innerText = "Card registered!";
+        addToLiveTable(payload);
+        clearForm();
+        loadUsers();
+      } else {
+        log.innerText = "Registration failed!";
+      }
+    });
 
-  renderTable(users);
-}
+    // CLEAR BUTTON
+    clearBtn.addEventListener("click", () => {
+      clearForm();
+      log.innerText = "Form cleared";
+    });
 
-// -------------------------------
-// RENDER TABLE
-// -------------------------------
-function renderTable(users) {
-  tableBody.innerHTML = "";
+    function clearForm() {
+      uidInput.value = "";
+      nameInput.value = "";
+      employeeInput.value = "";
+      accessSelect.value = "USER";
+      cottageSelect.value = "";
+      validInput.value = "";
+    }
 
-  users.forEach(user => {
-    const tr = document.createElement("tr");
+    // LIVE TABLE UPDATE
+    function addToLiveTable(card) {
+      liveData.unshift(card);
+      if (liveData.length > 5) liveData.pop();
 
-    tr.innerHTML = `
-      <td>${user.name}</td>
-      <td>${user.employee_id}</td>
-      <td>${user.access_level}</td>
-      <td>${user.valid_until || "-"}</td>
-      <td>${user.cottage}</td>
-    `;
+      liveTable.innerHTML = "";
+      liveData.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${c.name}</td>
+          <td>${c.employee_id}</td>
+          <td>${c.uid}</td>
+          <td>${c.access_level}</td>
+          <td>${c.cottage}</td>
+          <td>${c.valid_until || "-"}</td>
+        `;
+        liveTable.appendChild(tr);
+      });
+    }
 
-    tableBody.appendChild(tr);
-  });
-}
+    // DATABASE TABLE
+    let currentCottage = "";
+    let currentSort = "";
 
-// -------------------------------
-// INIT
-// -------------------------------
-loadUsers();
-</script>
+    async function loadUsers(cottage = currentCottage) {
+      currentCottage = cottage;
+      let url = `/api/users?`;
+      if (cottage) url += `cottage=${cottage}&`;
+      if (currentSort) url += `sort=${currentSort}`;
 
+      const res = await fetch(url);
+      const data = await res.json();
 
+      usersTable.innerHTML = "";
+      data.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${u.name || "-"}</td>
+          <td>${u.employee_id || "-"}</td>
+          <td>${u.access_level}</td>
+          <td>${u.valid_until || "-"}</td>
+          <td>${u.cottage || "-"}</td>
+        `;
+        usersTable.appendChild(tr);
+      });
+    }
+
+    function sortUsers(type) {
+      currentSort = type;
+      loadUsers();
+    }
+
+    // INIT
+    loadUsers();
+  </script>
 </body>
 </html>
